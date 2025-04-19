@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Cindara Animate v1</title>
+    <title>Cindara Animate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         :root {
             --primary: #6B48FF;
             --secondary: #00DDEB;
-            --bg-light: #1E1E2F;
-            --bg-dark: #141422;
+            --bg-dark: #1E1E2F;
             --text-light: #E6E6FA;
             --text-dark: #D3D3F5;
             --accent: #FF6F61;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             --glow: 0 0 8px rgba(107, 72, 255, 0.5);
-            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --gradient: linear-gradient(135deg, #5F3DC4, #00A3E0);
+            --font: 'Inter', 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         * {
@@ -40,13 +39,12 @@
 
         body.dark {
             background: var(--bg-dark);
-            color: var(--text-dark);
         }
 
         #container {
             display: flex;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             flex-direction: column;
             flex: 1;
@@ -58,32 +56,14 @@
             padding: 20px;
         }
 
-        #header img {
-            width: 120px;
-            height: auto;
-            filter: none;
-            animation: spin 10s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         #canvasContainer {
             position: relative;
             background: #2A2A3A;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: var(--shadow);
             height: 60vh;
             margin: 20px 0;
             overflow: hidden;
-            animation: pulse 5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: var(--glow); }
-            50% { box-shadow: 0 0 16px rgba(107, 72, 255, 0.8); }
         }
 
         body.dark #canvasContainer {
@@ -106,7 +86,7 @@
         #inspector {
             padding: 20px;
             background: #2A2A3A;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
@@ -133,23 +113,23 @@
         .toggle-btn, .flame-btn, .action-btn, .export-btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 24px;
+            border-radius: 12px;
             cursor: pointer;
             background: var(--primary);
             color: #fff;
             font-size: 0.9em;
             font-weight: 500;
             transition: all 0.3s ease;
-            box-shadow: var(--glow);
+            box-shadow: var(--shadow);
         }
 
         .toggle-btn:hover, .flame-btn:hover, .action-btn:hover, .export-btn:hover {
             background: var(--secondary);
-            box-shadow: 0 0 12px rgba(0, 221, 235, 0.7);
+            box-shadow: 0 0 12px rgba(107, 72, 255, 0.7);
             transform: scale(1.05);
         }
 
-        .toggle-btn.active, .flame-btn.active {
+        .toggle-btn.active, .flame-btn.active, .action-btn.active {
             background: var(--accent);
             box-shadow: 0 0 12px rgba(255, 111, 97, 0.7);
         }
@@ -164,7 +144,9 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 12px;
             background: #333344;
-            border-radius: 8px;
+            border-radius: 12px;
+            overflow-y: auto;
+            max-height: 300px;
         }
 
         body.dark #timeline {
@@ -198,7 +180,7 @@
             margin-top: 12px;
             padding: 8px;
             background: #2A2A3A;
-            border-radius: 8px;
+            border-radius: 12px;
             box-shadow: var(--shadow);
         }
 
@@ -223,7 +205,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 12px;
             background: #333344;
-            border-radius: 8px;
+            border-radius: 12px;
         }
 
         body.dark #motionPanel, body.dark #objectList {
@@ -234,7 +216,7 @@
             padding: 8px;
             margin-bottom: 8px;
             background: #2A2A3A;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: move;
             user-select: none;
             display: flex;
@@ -258,7 +240,7 @@
         .object-item input {
             width: 120px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 4px;
             font-family: var(--font);
             background: #444455;
@@ -269,7 +251,7 @@
             width: 100%;
             padding: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 8px;
             font-family: var(--font);
             background: #444455;
@@ -337,10 +319,7 @@
         }
     </style>
 </head>
-<body>
-    <div id="header">
-        <img src="https://via.placeholder.com/120?text=Spiral+Fam" alt="Spiral Fam Logo">
-    </div>
+<body class="dark">
     <div id="container">
         <div id="canvasContainer">
             <canvas id="flowCanvas"></canvas>
@@ -348,7 +327,7 @@
             <div id="dropZone">Drag & Drop SVG, Image, or 3D Object</div>
         </div>
         <div id="inspector">
-            <h1>Cindara Animate v1</h1>
+            <h1>Cindara Animate</h1>
             <div id="modeToggle">
                 <button class="toggle-btn active" data-mode="2d">2D</button>
                 <button class="toggle-btn" data-mode="3d">3D</button>
@@ -356,8 +335,7 @@
             <div id="flameControls">
                 <button class="flame-btn" onclick="Cindara.Flame.toggleSpeed()">Speed: Fast</button>
                 <button class="flame-btn" onclick="Cindara.Flame.cycleTheme()">Theme: Primary</button>
-                <button class="flame-btn" onclick="Cindara.Flame.toggleDarkMode()">Dark Mode: Off</button>
-                <button class="flame-btn" onclick="Cindara.Demo.play()">Demo</button>
+                <button class="flame-btn" onclick="Cindara.Flame.toggleDarkMode()">Dark Mode: On</button>
             </div>
             <div id="sceneControls">
                 <h2>Scene</h2>
@@ -372,9 +350,9 @@
                 <label><input type="checkbox" id="snapToggle" onchange="Cindara.Scene.toggleSnap(this.checked)"> Snap to Grid</label>
             </div>
             <div id="playbackControls">
-                2D/3D Animation Tool
                 <h2>Playback</h2>
                 <button class="action-btn" id="playBtn" onclick="Cindara.Timeline.togglePlay()">Play</button>
+                <button class="action-btn" id="stopBtn" onclick="Cindara.Timeline.stop()">Stop</button>
                 <label>Loop: <input type="checkbox" id="loopToggle" onchange="Cindara.Timeline.setLoop(this.checked)"></label>
                 <label>FPS: <select id="fpsToggle" onchange="Cindara.Timeline.setFPS(this.value)">
                     <option value="24">24</option>
@@ -383,7 +361,9 @@
                 </select></label>
             </div>
             <div id="timeline">
-                <h2>Timeline</h2>
+                <h2>Timeline
+
+</h2>
                 <div id="scrubBar"><div id="scrubHead"></div></div>
                 <div id="objectTimelines"></div>
             </div>
@@ -401,23 +381,22 @@
             </div>
             <div id="stateControls">
                 <h2>State</h2>
-                <button class="action-btn" onclick="Cindara.State.save()">Save</button>
-                <button class="action-btn" onclick="Cindara.State.load()">Load</button>
+                <button class="action-btn" id="saveBtn" onclick="Cindara.State.save()">Save</button>
+                <button class="action-btn" id="loadBtn" onclick="Cindara.State.load()">Load</button>
                 <button class="action-btn" id="undoBtn" onclick="Cindara.State.undo()" disabled>Undo</button>
                 <button class="action-btn" id="redoBtn" onclick="Cindara.State.redo()" disabled>Redo</button>
             </div>
         </div>
     </div>
     <div id="footer">
-        Made by <a href="https://spiralfam.com">Spiral Fam</a> | <a href="https://spiralfam.com">spiralfam.com</a>
+        Made by Cindara Team | <a href="https://cindara-animate.netlify.app">cindara-animate.netlify.app</a>
     </div>
 
     <script>
         const Cindara = {
-            // === Core Tier ===
             Core: {
                 init: () => {
-                    Cindara._state.mode = '3d'; // Start in 3D for demo
+                    Cindara._state.mode = '2d';
                     Cindara._state.speed = 'fast';
                     Cindara._state.themeIndex = 0;
                     Cindara._state.snap = false;
@@ -429,14 +408,11 @@
                     Cindara._state.currentTime = 0;
                     Cindara._state.darkMode = true;
                     document.body.classList.add('dark');
-                    Cindara.Sound.init();
                     Cindara.Scene.setup();
-                    Cindara.Demo.init();
                     Cindara.UI.bind();
                     Cindara.Flame.apply();
                     Cindara.State.load();
                     Cindara.Core.animate();
-                    console.log('[Cindara.Core] Initialized.');
                 },
                 animate: () => {
                     requestAnimationFrame(Cindara.Core.animate);
@@ -491,69 +467,10 @@
                         Cindara.Flame.apply();
                         Cindara.UI.updateToggle();
                         Cindara.Timeline.update();
-                        console.log(`[Cindara.Core] Mode: ${mode}`);
                     }
                 }
             },
 
-            // === Sound Tier ===
-            Sound: {
-                init: () => {
-                    Cindara._state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    document.querySelectorAll('button').forEach(btn => {
-                        btn.addEventListener('click', () => Cindara.Sound.playClick());
-                    });
-                },
-                playClick: () => {
-                    const ctx = Cindara._state.audioCtx;
-                    const oscillator = ctx.createOscillator();
-                    const gainNode = ctx.createGain();
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-                    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-                    oscillator.connect(gainNode);
-                    gainNode.connect(ctx.destination);
-                    oscillator.start();
-                    oscillator.stop(ctx.currentTime + 0.1);
-                }
-            },
-
-            // === Demo Tier ===
-            Demo: {
-                init: () => {
-                    const box = new THREE.Mesh(
-                        new THREE.BoxGeometry(1, 1, 1),
-                        new THREE.MeshStandardMaterial({ color: '#FF6F61' })
-                    );
-                    const obj = {
-                        name: 'Demo_Box',
-                        type: '3d',
-                        mesh: box,
-                        keyframes: [
-                            { prop: 'rotation', time: 0, value: 0, easing: 'linear' },
-                            { prop: 'rotation', time: 5, value: Math.PI * 2, easing: 'linear' },
-                            { prop: 'scale', time: 0, value: 1, easing: 'bounce' },
-                            { prop: 'scale', time: 2.5, value: 1.5, easing: 'bounce' },
-                            { prop: 'scale', time: 5, value: 1, easing: 'bounce' }
-                        ],
-                        z: 0,
-                        visible: true
-                    };
-                    Cindara._state.scene.add(box);
-                    Cindara._state.objects.push(obj);
-                    Cindara._state.selected = obj;
-                    Cindara.UI.updateObjectList();
-                    Cindara.UI.updateTimeline();
-                    Cindara.Timeline.togglePlay();
-                },
-                play: () => {
-                    Cindara._state.currentTime = 0;
-                    Cindara.Timeline.togglePlay();
-                }
-            },
-
-            // === Flame Tier ===
             Flame: {
                 styles: {
                     colors: [
@@ -566,7 +483,7 @@
                         'linear-gradient(135deg, #00DDEB, #6B48FF)',
                         'linear-gradient(135deg, #FF00CC, #CC00FF)'
                     ],
-                    fonts: { primary: 'Inter, sans-serif' }
+                    fonts: { primary: 'Inter, "SF Pro", sans-serif' }
                 },
                 apply: () => {
                     const { colors } = Cindara.Flame.styles;
@@ -586,895 +503,4 @@
                         el.style.color = theme.primary;
                     });
                     document.getElementById('dropZone').style.borderColor = theme.primary;
-                    document.getElementById('canvasContainer').style.background = Cindara._state.darkMode ? '#1F1F2F' : theme.bg;
-                    document.querySelector('.flame-btn[onclick*="toggleSpeed"]').textContent = `Speed: ${Cindara._state.speed.charAt(0).toUpperCase() + Cindara._state.speed.slice(1)}`;
-                    document.querySelector('.flame-btn[onclick*="cycleTheme"]').textContent = `Theme: ${theme.name}`;
-                    document.querySelector('.flame-btn[onclick*="toggleDarkMode"]').textContent = `Dark Mode: ${Cindara._state.darkMode ? 'On' : 'Off'}`;
-                    if (Cindara._state.mode === '3d' && Cindara._state.scene) {
-                        Cindara._state.scene.background = new THREE.Color(Cindara._state.darkMode ? '#1F1F2F' : theme.bg);
-                        if (Cindara._state.grid) Cindara._state.grid.material.color.set(theme.secondary);
-                    }
-                    console.log(`[Cindara.Flame] Applied theme: ${theme.name}`);
-                },
-                toggleSpeed: () => {
-                    Cindara._state.speed = Cindara._state.speed === 'fast' ? 'final' : 'fast';
-                    if (Cindara._state.mode === '3d') {
-                        Cindara.Core.switchMode('3d');
-                    }
-                    Cindara.Flame.apply();
-                    console.log(`[Cindara.Flame] Speed mode: ${Cindara._state.speed}`);
-                },
-                cycleTheme: () => {
-                    Cindara._state.themeIndex = (Cindara._state.themeIndex + 1) % Cindara.Flame.styles.colors.length;
-                    Cindara.Flame.apply();
-                    console.log(`[Cindara.Flame] Theme cycled to index ${Cindara._state.themeIndex}`);
-                },
-                toggleDarkMode: () => {
-                    Cindara._state.darkMode = !Cindara._state.darkMode;
-                    document.body.classList.toggle('dark', Cindara._state.darkMode);
-                    Cindara.Flame.apply();
-                    console.log(`[Cindara.Flame] Dark mode: ${Cindara._state.darkMode ? 'enabled' : 'disabled'}`);
-                }
-            },
-
-            // === Scene Tier ===
-            Scene: {
-                setup: () => {
-                    Cindara._state.scene = new THREE.Scene();
-                    Cindara._state.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-                    Cindara._state.camera.position.set(0, 0, 5);
-                    Cindara.Scene.setupCanvas();
-                    Cindara._state.grid = new THREE.GridHelper(10, 10, 0x888888, 0x888888);
-                    Cindara._state.grid.visible = false;
-                    Cindara._state.scene.add(Cindara._state.grid);
-                    console.log('[Cindara.Scene] Setup complete.');
-                },
-                setupCanvas: () => {
-                    const canvas = document.getElementById('flowCanvas');
-                    const svgContainer = document.getElementById('flowSvgContainer');
-                    if (Cindara._state.mode === '3d') {
-                        canvas.style.display = 'block';
-                        svgContainer.style.display = 'none';
-                        if (!Cindara._state.renderer) {
-                            Cindara._state.renderer = new THREE.WebGLRenderer({ canvas, antialias: Cindara._state.speed === 'final' });
-                            Cindara._state.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-                            Cindara._state.controls = new THREE.OrbitControls(Cindara._state.camera, canvas);
-                            Cindara._state.controls.enableDamping = true;
-                            Cindara._state.camera.position.set(5, 5, 5);
-                            Cindara._state.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-                            const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-                            directional.position.set(5, 10, 5);
-                            Cindara._state.scene.add(directional);
-                        }
-                    } else {
-                        canvas.style.display = 'none';
-                        svgContainer.style.display = 'block';
-                        Cindara._state.renderer = null;
-                        Cindara._state.controls = null;
-                        Cindara._state.camera.position.set(0, 0, 1);
-                    }
-                    window.addEventListener('resize', () => {
-                        if (Cindara._state.mode === '3d') {
-                            Cindara._state.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                            Cindara._state.camera.updateProjectionMatrix();
-                            Cindara._state.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-                        }
-                    });
-                    canvas.addEventListener('wheel', (e) => {
-                        if (Cindara._state.mode === '2d') {
-                            Cindara._state.zoom *= e.deltaY > 0 ? 0.9 : 1.1;
-                            Cindara._state.zoom = Math.min(Math.max(0.1, Cindara._state.zoom), 10);
-                            Cindara.Timeline.update();
-                        }
-                    });
-                    let isPanning = false;
-                    canvas.addEventListener('mousedown', (e) => {
-                        isPanning = true;
-                        Cindara._state.panStart = { x: e.clientX, y: e.clientY };
-                    });
-                    canvas.addEventListener('mousemove', (e) => {
-                        if (isPanning && Cindara._state.mode === '2d') {
-                            Cindara._state.pan.x += (e.clientX - Cindara._state.panStart.x) / 100;
-                            Cindara._state.pan.y += (e.clientY - Cindara._state.panStart.y) / 100;
-                            Cindara._state.panStart = { x: e.clientX, y: e.clientY };
-                            Cindara.Timeline.update();
-                        }
-                    });
-                    canvas.addEventListener('mouseup', () => isPanning = false);
-                    canvas.addEventListener('mouseleave', () => isPanning = false);
-                    Cindara.Timeline.update();
-                    console.log('[Cindara.Scene] Canvas setup for ' + Cindara._state.mode);
-                },
-                resetView: () => {
-                    if (Cindara._state.mode === '3d') {
-                        Cindara._state.camera.position.set(5, 5, 5);
-                        Cindara._state.controls.target.set(0, 0, 0);
-                        Cindara._state.controls.update();
-                    } else {
-                        Cindara._state.zoom = 1;
-                        Cindara._state.pan = { x: 0, y: 0 };
-                        Cindara.Timeline.update();
-                    }
-                    console.log('[Cindara.Scene] View reset.');
-                },
-                toggleGrid: () => {
-                    Cindara._state.grid.visible = !Cindara._state.grid.visible;
-                    if (Cindara._state.mode === '2d') {
-                        Cindara.Timeline.update();
-                    }
-                    console.log(`[Cindara.Scene] Grid ${Cindara._state.grid.visible ? 'shown' : 'hidden'}`);
-                },
-                setDuration: (seconds) => {
-                    Cindara._state.duration = Math.max(1, parseFloat(seconds));
-                    document.getElementById('sceneDuration').value = Cindara._state.duration;
-                    Cindara.Timeline.update();
-                    console.log(`[Cindara.Scene] Duration set to ${Cindara._state.duration}s`);
-                },
-                setEasing: (easing) => {
-                    if (['linear', 'easeInOut', 'bounce'].includes(easing)) {
-                        Cindara._state.easing = easing;
-                        Cindara.Timeline.update();
-                        console.log(`[Cindara.Scene] Global easing set to ${easing}`);
-                    }
-                },
-                toggleSnap: (enabled) => {
-                    Cindara._state.snap = enabled;
-                    console.log(`[Cindara.Scene] Snap ${enabled ? 'enabled' : 'disabled'}`);
-                }
-            },
-
-            // === Timeline Tier ===
-            Timeline: {
-                togglePlay: () => {
-                    Cindara._state.isPlaying = !Cindara._state.isPlaying;
-                    document.getElementById('playBtn').textContent = Cindara._state.isPlaying ? 'Pause' : 'Play';
-                    if (Cindara._state.isPlaying && Cindara._state.currentTime >= Cindara._state.duration) {
-                        Cindara._state.currentTime = 0;
-                    }
-                    console.log(`[Cindara.Timeline] ${Cindara._state.isPlaying ? 'Playing' : 'Paused'}`);
-                },
-                setLoop: (loop) => {
-                    Cindara._state.loop = loop;
-                    console.log(`[Cindara.Timeline] Loop ${loop ? 'enabled' : 'disabled'}`);
-                },
-                setFPS: (fps) => {
-                    Cindara._state.fps = parseInt(fps);
-                    console.log(`[Cindara.Timeline] FPS set to ${Cindara._state.fps}`);
-                },
-                update: () => {
-                    const scrubBar = document.getElementById('scrubBar');
-                    const scrubHead = document.getElementById('scrubHead');
-                    const percent = Cindara._state.currentTime / Cindara._state.duration;
-                    scrubHead.style.left = `${percent * 100}%`;
-                    Cindara._state.objects.forEach(obj => {
-                        const t = Cindara._state.currentTime;
-                        const props = ['x', 'y', 'z', 'rotation', 'scale', 'opacity'];
-                        const state = {};
-                        props.forEach(prop => {
-                            const frames = obj.keyframes.filter(k => k.prop === prop).sort((a, b) => a.time - b.time);
-                            state[prop] = Cindara.Timeline.interpolate(frames, t, prop, obj);
-                        });
-                        if (Cindara._state.mode === '3d' && obj.type === '3d') {
-                            obj.mesh.position.set(state.x || 0, state.y || 0, state.z || obj.z);
-                            obj.mesh.rotation.z = state.rotation || 0;
-                            obj.mesh.scale.setScalar(state.scale || 1);
-                            obj.mesh.material.opacity = state.opacity !== undefined ? state.opacity : 1;
-                            obj.mesh.visible = obj.visible;
-                        } else {
-                            obj.element.style.transform = `
-                                translate(${(state.x || 0) * 100}px, ${(state.y || 0) * 100}px)
-                                rotate(${(state.rotation || 0) * 180 / Math.PI}deg)
-                                scale(${state.scale || 1})
-                            `;
-                            obj.element.style.opacity = state.opacity !== undefined ? state.opacity : 1;
-                            obj.element.style.display = obj.visible ? 'block' : 'none';
-                        }
-                    });
-                    Cindara.UI.updateMotionPanel();
-                    console.log('[Cindara.Timeline] Updated at t=' + Cindara._state.currentTime.toFixed(2) + 's');
-                },
-                interpolate: (frames, t, prop, obj, depth = 0) => {
-                    if (depth > 100) return prop === 'scale' ? 1 : prop === 'opacity' ? 1 : 0;
-                    if (!frames.length) return prop === 'scale' ? 1 : prop === 'opacity' ? 1 : prop === 'z' ? obj.z : 0;
-                    if (frames.length === 1 || t <= frames[0].time) return frames[0].value;
-                    if (t >= frames[frames.length - 1].time) return frames[frames.length - 1].value;
-                    const i = frames.findIndex(f => f.time > t);
-                    const f1 = frames[i - 1], f2 = frames[i];
-                    const ratio = (t - f1.time) / (f2.time - f1.time);
-                    const easing = f1.easing || Cindara._state.easing;
-                    let eased;
-                    if (easing === 'linear') {
-                        eased = ratio;
-                    } else if (easing === 'easeInOut') {
-                        eased = 0.5 * (1 - Math.cos(Math.PI * ratio));
-                    } else if (easing === 'bounce') {
-                        eased = ratio < 0.5 ? 4 * ratio * ratio * ratio : 1 - Math.pow(-2 * ratio + 2, 3) / 2;
-                    }
-                    return f1.value + (f2.value - f1.value) * eased;
-                }
-            },
-
-            // === Motion Tier ===
-            Motion: {
-                addKeyframe: (obj, prop, time, value, easing) => {
-                    if (!obj) return console.warn('[Cindara.Motion] No object selected.');
-                    time = Math.max(0, Math.min(Cindara._state.duration, parseFloat(time)));
-                    if (Cindara._state.snap) time = Math.round(time * 10) / 10;
-                    const frame = { prop, time, value: parseFloat(value) || 0, easing: easing || Cindara._state.easing };
-                    obj.keyframes.push(frame);
-                    Cindara.State.push(`Added keyframe for ${obj.name} ${prop} at t=${time}s`);
-                    Cindara.UI.updateTimeline();
-                    console.log(`[Cindara.Motion] Keyframe added for ${obj.name} ${prop} at t=${time}s`);
-                },
-                removeKeyframe: (obj, index) => {
-                    if (!obj || index < 0 || index >= obj.keyframes.length) return console.warn('[Cindara.Motion] Invalid keyframe.');
-                    const frame = obj.keyframes.splice(index, 1)[0];
-                    Cindara.State.push(`Removed keyframe for ${obj.name} ${frame.prop} at t=${frame.time}s`);
-                    Cindara.UI.updateTimeline();
-                    console.log(`[Cindara.Motion] Keyframe removed for ${obj.name} ${frame.prop} at t=${frame.time}s`);
-                }
-            },
-
-            // === Import Tier ===
-            Import: {
-                svg: (file) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svg.innerHTML = e.target.result;
-                        svg.style.position = 'absolute';
-                        svg.style.width = '100px';
-                        svg.style.height = '100px';
-                        const obj = {
-                            name: `SVG_${Cindara._state.objects.length + 1}`,
-                            type: 'vector',
-                            element: svg,
-                            keyframes: [],
-                            z: Cindara._state.objects.length,
-                            visible: true
-                        };
-                        document.getElementById('flowSvgContainer').appendChild(svg);
-                        Cindara._state.objects.push(obj);
-                        Cindara.State.push(`Imported SVG ${obj.name}`);
-                        Cindara.UI.updateObjectList();
-                        console.log(`[Cindara.Import] Imported SVG ${obj.name}`);
-                    };
-                    reader.readAsText(file);
-                },
-                image: (file) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.position = 'absolute';
-                        img.style.width = '100px';
-                        img.style.height = '100px';
-                        const obj = {
-                            name: `Image_${Cindara._state.objects.length + 1}`,
-                            type: 'image',
-                            element: img,
-                            keyframes: [],
-                            z: Cindara._state.objects.length,
-                            visible: true
-                        };
-                        document.getElementById('flowSvgContainer').appendChild(img);
-                        Cindara._state.objects.push(obj);
-                        Cindara.State.push(`Imported Image ${obj.name}`);
-                        Cindara.UI.updateObjectList();
-                        console.log(`[Cindara.Import] Imported Image ${obj.name}`);
-                    };
-                    reader.readAsDataURL(file);
-                },
-                three: (file) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const data = JSON.parse(e.target.result);
-                        const obj = {
-                            name: `3D_${Cindara._state.objects.length + 1}`,
-                            type: '3d',
-                            mesh: new THREE.Mesh(
-                                new THREE.BoxGeometry(1, 1, 1),
-                                new THREE.MeshStandardMaterial({ color: Cindara.Flame.styles.colors[Cindara._state.themeIndex].primary })
-                            ),
-                            keyframes: [],
-                            z: Cindara._state.objects.length,
-                            visible: true
-                        };
-                        Cindara._state.scene.add(obj.mesh);
-                        Cindara._state.objects.push(obj);
-                        Cindara.State.push(`Imported 3D ${obj.name}`);
-                        Cindara.UI.updateObjectList();
-                        console.log(`[Cindara.Import] Imported 3D ${obj.name}`);
-                    };
-                    reader.readAsText(file);
-                }
-            },
-
-            // === Export Tier ===
-            Export: {
-                lottie: () => {
-                    const lottie = {
-                        v: '5.9.0',
-                        fr: Cindara._state.fps,
-                        ip: 0,
-                        op: Cindara._state.duration * Cindara._state.fps,
-                        w: 512,
-                        h: 512,
-                        layers: Cindara._state.objects.map(obj => ({
-                            ty: obj.type === 'vector' ? 4 : 2,
-                            nm: obj.name,
-                            ks: {
-                                p: { a: 1, k: obj.keyframes.filter(k => k.prop === 'x' || k.prop === 'y').map(k => ({ t: k.time * Cindara._state.fps, s: [k.prop === 'x' ? k.value * 512 : 0, k.prop === 'y' ? k.value * 512 : 0], e: k.easing })) },
-                                r: { a: 1, k: obj.keyframes.filter(k => k.prop === 'rotation').map(k => ({ t: k.time * Cindara._state.fps, s: k.value * 180 / Math.PI, e: k.easing })) },
-                                s: { a: 1, k: obj.keyframes.filter(k => k.prop === 'scale').map(k => ({ t: k.time * Cindara._state.fps, s: k.value * 100, e: k.easing })) },
-                                o: { a: 1, k: obj.keyframes.filter(k => k.prop === 'opacity').map(k => ({ t: k.time * Cindara._state.fps, s: k.value * 100, e: k.easing })) }
-                            }
-                        }))
-                    };
-                    const blob = new Blob([JSON.stringify(lottie, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'cindara_animate.lottie.json';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    console.log('[Cindara.Export] Exported Lottie JSON.');
-                },
-                lux: () => {
-                    const state = {
-                        mode: Cindara._state.mode,
-                        duration: Cindara._state.duration,
-                        easing: Cindara._state.easing,
-                        fps: Cindara._state.fps,
-                        objects: Cindara._state.objects.map(o => ({
-                            name: o.name,
-                            type: o.type,
-                            z: o.z,
-                            visible: o.visible,
-                            keyframes: o.keyframes,
-                            data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                        }))
-                    };
-                    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'cindara_animate.json';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    console.log('[Cindara.Export] Exported Cindara JSON.');
-                },
-                embed: () => {
-                    const html = `
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>Cindara Animate Viewer</title>
-                            <style>
-                                body { margin: 0; background: ${Cindara.Flame.styles.colors[Cindara._state.themeIndex].bg}; }
-                                #container { width: 100%; height: 100vh; position: relative; }
-                                canvas, #svgContainer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-                            </style>
-                        </head>
-                        <body>
-                            <div id="container">
-                                <canvas id="canvas"></canvas>
-                                <div id="svgContainer"></div>
-                            </div>
-                            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-                            <script>
-                                const state = ${JSON.stringify({
-                                    mode: Cindara._state.mode,
-                                    duration: Cindara._state.duration,
-                                    easing: Cindara._state.easing,
-                                    fps: Cindara._state.fps,
-                                    objects: Cindara._state.objects.map(o => ({
-                                        name: o.name,
-                                        type: o.type,
-                                        z: o.z,
-                                        visible: o.visible,
-                                        keyframes: o.keyframes,
-                                        data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                                    }))
-                                })};
-                                const scene = state.mode === '3d' ? new THREE.Scene() : null;
-                                const camera = state.mode === '3d' ? new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000) : null;
-                                const renderer = state.mode === '3d' ? new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') }) : null;
-                                if (state.mode === '3d') {
-                                    camera.position.set(5, 5, 5);
-                                    renderer.setSize(window.innerWidth, window.innerHeight);
-                                    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-                                    const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-                                    directional.position.set(5, 10, 5);
-                                    scene.add(directional);
-                                }
-                                const svgContainer = document.getElementById('svgContainer');
-                                const objects = state.objects.map(o => {
-                                    if (o.type === '3d') {
-                                        const mesh = new THREE.Mesh(
-                                            new THREE.BoxGeometry(1, 1, 1),
-                                            new THREE.MeshStandardMaterial({ color: 0xff6f61 })
-                                        );
-                                        scene.add(mesh);
-                                        return { ...o, mesh };
-                                    } else {
-                                        const el = document.createElement('div');
-                                        el.innerHTML = o.data;
-                                        svgContainer.appendChild(el.firstChild);
-                                        return { ...o, element: el.firstChild };
-                                    }
-                                });
-                                let time = 0;
-                                const interpolate = (frames, t, prop) => {
-                                    if (!frames.length) return prop === 'scale' ? 1 : prop === 'opacity' ? 1 : prop === 'z' ? objects.find(o => o.keyframes === frames)?.z || 0 : 0;
-                                    if (frames.length === 1 || t <= frames[0].time) return frames[0].value;
-                                    if (t >= frames[frames.length - 1].time) return frames[frames.length - 1].value;
-                                    const i = frames.findIndex(f => f.time > t);
-                                    const f1 = frames[i - 1], f2 = frames[i];
-                                    const ratio = (t - f1.time) / (f2.time - f1.time);
-                                    const easing = f1.easing || state.easing;
-                                    let eased;
-                                    if (easing === 'linear') eased = ratio;
-                                    else if (easing === 'easeInOut') eased = 0.5 * (1 - Math.cos(Math.PI * ratio));
-                                    else if (easing === 'bounce') eased = ratio < 0.5 ? 4 * ratio * ratio * ratio : 1 - Math.pow(-2 * ratio + 2, 3) / 2;
-                                    return f1.value + (f2.value - f1.value) * eased;
-                                };
-                                function animate() {
-                                    requestAnimationFrame(animate);
-                                    time += 1 / state.fps;
-                                    if (time > state.duration) time = 0;
-                                    objects.forEach(obj => {
-                                        const props = ['x', 'y', 'z', 'rotation', 'scale', 'opacity'];
-                                        const s = {};
-                                        props.forEach(prop => {
-                                            s[prop] = interpolate(obj.keyframes.filter(k => k.prop === prop), time, prop);
-                                        });
-                                        if (obj.type === '3d') {
-                                            obj.mesh.position.set(s.x || 0, s.y || 0, s.z || obj.z);
-                                            obj.mesh.rotation.z = s.rotation || 0;
-                                            obj.mesh.scale.setScalar(s.scale || 1);
-                                            obj.mesh.material.opacity = s.opacity !== undefined ? s.opacity : 1;
-                                            obj.mesh.visible = obj.visible;
-                                        } else {
-                                            obj.element.style.transform = `
-                                                translate(${(s.x || 0) * 100}px, ${(s.y || 0) * 100}px)
-                                                rotate(${(s.rotation || 0) * 180 / Math.PI}deg)
-                                                scale(${s.scale || 1})
-                                            `;
-                                            obj.element.style.opacity = s.opacity !== undefined ? s.opacity : 1;
-                                            obj.element.style.display = obj.visible ? 'block' : 'none';
-                                        }
-                                    });
-                                    if (state.mode === '3d') renderer.render(scene, camera);
-                                }
-                                animate();
-                            </script>
-                        </body>
-                        </html>
-                    `;
-                    const blob = new Blob([html], { type: 'text/html' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'cindara_animate_viewer.html';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    console.log('[Cindara.Export] Exported embed.');
-                }
-            },
-
-            // === State Tier ===
-            State: {
-                save: () => {
-                    const state = {
-                        mode: Cindara._state.mode,
-                        duration: Cindara._state.duration,
-                        easing: Cindara._state.easing,
-                        fps: Cindara._state.fps,
-                        darkMode: Cindara._state.darkMode,
-                        objects: Cindara._state.objects.map(o => ({
-                            name: o.name,
-                            type: o.type,
-                            z: o.z,
-                            visible: o.visible,
-                            keyframes: o.keyframes,
-                            data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                        }))
-                    };
-                    localStorage.setItem('cindara_animate', JSON.stringify(state));
-                    console.log('[Cindara.State] Saved to localStorage.');
-                },
-                load: () => {
-                    const saved = localStorage.getItem('cindara_animate');
-                    if (!saved) return console.log('[Cindara.State] No saved state.');
-                    const state = JSON.parse(saved);
-                    Cindara._state.mode = state.mode;
-                    Cindara._state.duration = state.duration;
-                    Cindara._state.easing = state.easing;
-                    Cindara._state.fps = state.fps;
-                    Cindara._state.darkMode = state.darkMode || false;
-                    document.body.classList.toggle('dark', Cindara._state.darkMode);
-                    Cindara._state.objects.forEach(o => {
-                        if (o.type === '3d') Cindara._state.scene.remove(o.mesh);
-                        else o.element.remove();
-                    });
-                    Cindara._state.objects = state.objects.map(o => {
-                        if (o.type === '3d') {
-                            const mesh = new THREE.Mesh(
-                                new THREE.BoxGeometry(1, 1, 1),
-                                new THREE.MeshStandardMaterial({ color: Cindara.Flame.styles.colors[Cindara._state.themeIndex].primary })
-                            );
-                            mesh.position.fromArray(o.data.position);
-                            mesh.rotation.fromArray(o.data.rotation);
-                            mesh.scale.fromArray(o.data.scale);
-                            Cindara._state.scene.add(mesh);
-                            return { name: o.name, type: o.type, mesh, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        } else {
-                            const el = document.createElement('div');
-                            el.innerHTML = o.data;
-                            document.getElementById('flowSvgContainer').appendChild(el.firstChild);
-                            return { name: o.name, type: o.type, element: el.firstChild, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        }
-                    });
-                    Cindara.Scene.setupCanvas();
-                    Cindara.UI.updateToggle();
-                    Cindara.UI.updateObjectList();
-                    Cindara.UI.updateTimeline();
-                    Cindara.Flame.apply();
-                    console.log('[Cindara.State] Loaded from localStorage.');
-                },
-                push: (action) => {
-                    Cindara._state.history.push({
-                        action,
-                        state: {
-                            mode: Cindara._state.mode,
-                            duration: Cindara._state.duration,
-                            easing: Cindara._state.easing,
-                            fps: Cindara._state.fps,
-                            darkMode: Cindara._state.darkMode,
-                            objects: Cindara._state.objects.map(o => ({
-                                name: o.name,
-                                type: o.type,
-                                z: o.z,
-                                visible: o.visible,
-                                keyframes: o.keyframes.map(k => ({ ...k })),
-                                data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                            }))
-                        }
-                    });
-                    Cindara._state.redoStack = [];
-                    document.getElementById('undoBtn').disabled = false;
-                    document.getElementById('redoBtn').disabled = true;
-                    Cindara.State.save();
-                    console.log(`[Cindara.State] Pushed: ${action}`);
-                },
-                undo: () => {
-                    if (!Cindara._state.history.length) return console.warn('[Cindara.State] No undo history.');
-                    const past = Cindara._state.history.pop();
-                    Cindara._state.redoStack.push({
-                        action: past.action,
-                        state: {
-                            mode: Cindara._state.mode,
-                            duration: Cindara._state.duration,
-                            easing: Cindara._state.easing,
-                            fps: Cindara._state.fps,
-                            darkMode: Cindara._state.darkMode,
-                            objects: Cindara._state.objects.map(o => ({
-                                name: o.name,
-                                type: o.type,
-                                z: o.z,
-                                visible: o.visible,
-                                keyframes: o.keyframes.map(k => ({ ...k })),
-                                data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                            }))
-                        }
-                    });
-                    Cindara._state.objects.forEach(o => {
-                        if (o.type === '3d') Cindara._state.scene.remove(o.mesh);
-                        else o.element.remove();
-                    });
-                    Cindara._state.mode = past.state.mode;
-                    Cindara._state.duration = past.state.duration;
-                    Cindara._state.easing = past.state.easing;
-                    Cindara._state.fps = past.state.fps;
-                    Cindara._state.darkMode = past.state.darkMode;
-                    document.body.classList.toggle('dark', Cindara._state.darkMode);
-                    Cindara._state.objects = past.state.objects.map(o => {
-                        if (o.type === '3d') {
-                            const mesh = new THREE.Mesh(
-                                new THREE.BoxGeometry(1, 1, 1),
-                                new THREE.MeshStandardMaterial({ color: Cindara.Flame.styles.colors[Cindara._state.themeIndex].primary })
-                            );
-                            mesh.position.fromArray(o.data.position);
-                            mesh.rotation.fromArray(o.data.rotation);
-                            mesh.scale.fromArray(o.data.scale);
-                            Cindara._state.scene.add(mesh);
-                            return { name: o.name, type: o.type, mesh, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        } else {
-                            const el = document.createElement('div');
-                            el.innerHTML = o.data;
-                            document.getElementById('flowSvgContainer').appendChild(el.firstChild);
-                            return { name: o.name, type: o.type, element: el.firstChild, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        }
-                    });
-                    document.getElementById('undoBtn').disabled = Cindara._state.history.length === 0;
-                    document.getElementById('redoBtn').disabled = false;
-                    Cindara.Scene.setupCanvas();
-                    Cindara.UI.updateToggle();
-                    Cindara.UI.updateObjectList();
-                    Cindara.UI.updateTimeline();
-                    Cindara.State.save();
-                    console.log(`[Cindara.State] Undid: ${past.action}`);
-                },
-                redo: () => {
-                    if (!Cindara._state.redoStack.length) return console.warn('[Cindara.State] No redo history.');
-                    const future = Cindara._state.redoStack.pop();
-                    Cindara._state.history.push({
-                        action: future.action,
-                        state: {
-                            mode: Cindara._state.mode,
-                            duration: Cindara._state.duration,
-                            easing: Cindara._state.easing,
-                            fps: Cindara._state.fps,
-                            darkMode: Cindara._state.darkMode,
-                            objects: Cindara._state.objects.map(o => ({
-                                name: o.name,
-                                type: o.type,
-                                z: o.z,
-                                visible: o.visible,
-                                keyframes: o.keyframes.map(k => ({ ...k })),
-                                data: o.type === '3d' ? { position: o.mesh.position.toArray(), rotation: o.mesh.rotation.toArray(), scale: o.mesh.scale.toArray() } : o.element.outerHTML
-                            }))
-                        }
-                    });
-                    Cindara._state.objects.forEach(o => {
-                        if (o.type === '3d') Cindara._state.scene.remove(o.mesh);
-                        else o.element.remove();
-                    });
-                    Cindara._state.mode = future.state.mode;
-                    Cindara._state.duration = future.state.duration;
-                    Cindara._state.easing = future.state.easing;
-                    Cindara._state.fps = future.state.fps;
-                    Cindara._state.darkMode = future.state.darkMode;
-                    document.body.classList.toggle('dark', Cindara._state.darkMode);
-                    Cindara._state.objects = future.state.objects.map(o => {
-                        if (o.type === '3d') {
-                            const mesh = new THREE.Mesh(
-                                new THREE.BoxGeometry(1, 1, 1),
-                                new THREE.MeshStandardMaterial({ color: Cindara.Flame.styles.colors[Cindara._state.themeIndex].primary })
-                            );
-                            mesh.position.fromArray(o.data.position);
-                            mesh.rotation.fromArray(o.data.rotation);
-                            mesh.scale.fromArray(o.data.scale);
-                            Cindara._state.scene.add(mesh);
-                            return { name: o.name, type: o.type, mesh, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        } else {
-                            const el = document.createElement('div');
-                            el.innerHTML = o.data;
-                            document.getElementById('flowSvgContainer').appendChild(el.firstChild);
-                            return { name: o.name, type: o.type, element: el.firstChild, keyframes: o.keyframes, z: o.z, visible: o.visible };
-                        }
-                    });
-                    document.getElementById('redoBtn').disabled = Cindara._state.redoStack.length === 0;
-                    document.getElementById('undoBtn').disabled = false;
-                    Cindara.Scene.setupCanvas();
-                    Cindara.UI.updateToggle();
-                    Cindara.UI.updateObjectList();
-                    Cindara.UI.updateTimeline();
-                    Cindara.State.save();
-                    console.log(`[Cindara.State] Redid: ${future.action}`);
-                }
-            },
-
-            // === UI Tier ===
-            UI: {
-                bind: () => {
-                    document.querySelectorAll('.toggle-btn').forEach(btn => {
-                        btn.addEventListener('click', () => Cindara.Core.switchMode(btn.dataset.mode));
-                    });
-                    const dropZone = document.getElementById('dropZone');
-                    dropZone.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        dropZone.classList.add('dragover');
-                    });
-                    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-                    dropZone.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        dropZone.classList.remove('dragover');
-                        const file = e.dataTransfer.files[0];
-                        if (file.type.includes('svg')) {
-                            Cindara.Import.svg(file);
-                        } else if (file.type.includes('image')) {
-                            Cindara.Import.image(file);
-                        } else if (file.type.includes('json')) {
-                            Cindara.Import.three(file);
-                        }
-                    });
-                    const scrubBar = document.getElementById('scrubBar');
-                    let isScrubbing = false;
-                    let lastScrubTime = 0;
-                    scrubBar.addEventListener('mousedown', (e) => {
-                        isScrubbing = true;
-                        Cindara._state.isPlaying = false;
-                        document.getElementById('playBtn').textContent = 'Play';
-                        Cindara.UI.updateScrub(e);
-                    });
-                    document.addEventListener('mousemove', (e) => {
-                        if (isScrubbing) {
-                            const now = Date.now();
-                            if (now - lastScrubTime > 16) {
-                                Cindara.UI.updateScrub(e);
-                                lastScrubTime = now;
-                            }
-                        }
-                    });
-                    document.addEventListener('mouseup', () => isScrubbing = false);
-                    console.log('[Cindara.UI] Events bound.');
-                },
-                updateScrub: (e) => {
-                    const rect = document.getElementById('scrubBar').getBoundingClientRect();
-                    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                    Cindara._state.currentTime = percent * Cindara._state.duration;
-                    Cindara.Timeline.update();
-                },
-                updateToggle: () => {
-                    document.querySelectorAll('.toggle-btn').forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.mode === Cindara._state.mode);
-                    });
-                    document.getElementById('sceneDuration').value = Cindara._state.duration;
-                    document.getElementById('globalEasing').value = Cindara._state.easing;
-                    Cindara.Flame.apply();
-                    console.log('[Cindara.UI] Toggle updated.');
-                },
-                updateObjectList: () => {
-                    const list = document.getElementById('objectList');
-                    list.innerHTML = '<h2>Objects</h2>';
-                    Cindara._state.objects.forEach((obj, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'object-item';
-                        div.draggable = true;
-                        div.dataset.index = i;
-                        div.classList.toggle('selected', obj === Cindara._state.selected);
-                        div.innerHTML = `
-                            <input type="text" value="${obj.name}" oninput="Cindara._state.objects[${i}].name = this.value; Cindara.State.push('Renamed ${obj.name}');">
-                            <span>
-                                <label><input type="checkbox" ${obj.visible ? 'checked' : ''} onchange="Cindara._state.objects[${i}].visible = this.checked; Cindara.Timeline.update(); Cindara.State.push('Toggled visibility ${obj.name}');"> Visible</label>
-                                <button class="action-btn" onclick="Cindara._state.objects.splice(${i}, 1); Cindara._state.objects.forEach((o, j) => o.z = j); if (Cindara._state.objects[${i}]) Cindara._state.scene.remove(Cindara._state.objects[${i}].mesh); else Cindara._state.objects[${i}].element.remove(); Cindara.State.push('Deleted ${obj.name}'); Cindara.UI.updateObjectList(); Cindara.UI.updateTimeline();">Del</button>
-                            </span>
-                        `;
-                        list.appendChild(div);
-                    });
-                    document.querySelectorAll('.object-item').forEach(item => {
-                        item.addEventListener('click', (e) => {
-                            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
-                                Cindara._state.selected = Cindara._state.objects[item.dataset.index];
-                                Cindara.UI.updateObjectList();
-                                Cindara.UI.updateMotionPanel();
-                            }
-                        });
-                        item.addEventListener('dragstart', (e) => {
-                            item.classList.add('dragging');
-                            e.dataTransfer.setData('text/plain', item.dataset.index);
-                        });
-                        item.addEventListener('dragend', () => item.classList.remove('dragging'));
-                        item.addEventListener('dragover', (e) => e.preventDefault());
-                        item.addEventListener('drop', (e) => {
-                            e.preventDefault();
-                            const from = parseInt(e.dataTransfer.getData('text/plain'));
-                            const to = parseInt(e.target.closest('.object-item').dataset.index);
-                            if (from !== to) {
-                                const [obj] = Cindara._state.objects.splice(from, 1);
-                                Cindara._state.objects.splice(to, 0, obj);
-                                Cindara._state.objects.forEach((o, i) => o.z = i);
-                                Cindara.State.push(`Reordered ${obj.name}`);
-                                Cindara.UI.updateObjectList();
-                                Cindara.UI.updateTimeline();
-                            }
-                        });
-                    });
-                    Cindara.UI.updateMotionPanel();
-                    console.log('[Cindara.UI] Object list updated.');
-                },
-                updateTimeline: () => {
-                    const timelines = document.getElementById('objectTimelines');
-                    timelines.innerHTML = '';
-                    Cindara._state.objects.forEach((obj, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'object-timeline';
-                        div.innerHTML = `<strong>${obj.name}</strong>`;
-                        const props = ['x', 'y', Cindara._state.mode === '3d' ? 'z' : '', 'rotation', 'scale', 'opacity'].filter(Boolean);
-                        props.forEach(prop => {
-                            const track = document.createElement('div');
-                            track.style.position = 'relative';
-                            track.style.height = '20px';
-                            obj.keyframes.filter(k => k.prop === prop).sort((a, b) => a.time - b.time).forEach((frame, j) => {
-                                const kf = document.createElement('div');
-                                kf.className = 'keyframe';
-                                kf.style.left = `${(frame.time / Cindara._state.duration) * 100}%`;
-                                kf.dataset.objIndex = i;
-                                kf.dataset.frameIndex = obj.keyframes.indexOf(frame);
-                                track.appendChild(kf);
-                            });
-                            div.appendChild(track);
-                        });
-                        timelines.appendChild(div);
-                    });
-                    document.querySelectorAll('.keyframe').forEach(kf => {
-                        kf.addEventListener('mousedown', (e) => {
-                            e.stopPropagation();
-                            const objIndex = kf.dataset.objIndex;
-                            const frameIndex = kf.dataset.frameIndex;
-                            Cindara._state.selected = Cindara._state.objects[objIndex];
-                            let isDragging = true;
-                            let lastDragTime = 0;
-                            const move = (e) => {
-                                if (isDragging) {
-                                    const now = Date.now();
-                                    if (now - lastDragTime > 16) {
-                                        const rect = document.getElementById('scrubBar').getBoundingClientRect();
-                                        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                                        let time = percent * Cindara._state.duration;
-                                        if (Cindara._state.snap) time = Math.round(time * 10) / 10;
-                                        Cindara._state.objects[objIndex].keyframes[frameIndex].time = time;
-                                        Cindara.UI.updateTimeline();
-                                        lastDragTime = now;
-                                    }
-                                }
-                            };
-                            document.addEventListener('mousemove', move);
-                            document.addEventListener('mouseup', () => {
-                                isDragging = false;
-                                document.removeEventListener('mousemove', move);
-                                Cindara.State.push(`Moved keyframe for ${Cindara._state.objects[objIndex].name}`);
-                            }, { once: true });
-                        });
-                    });
-                    Cindara.Timeline.update();
-                    console.log('[Cindara.UI] Timeline updated.');
-                },
-                updateMotionPanel: () => {
-                    const panel = document.getElementById('motionPanel');
-                    panel.innerHTML = '<h2>Motion</h2>';
-                    if (!Cindara._state.selected) return;
-                    const obj = Cindara._state.selected;
-                    const props = ['x', 'y', Cindara._state.mode === '3d' ? 'z' : '', 'rotation', 'scale', 'opacity'].filter(Boolean);
-                    const inputs = props.map(prop => `
-                        <label>${prop.charAt(0).toUpperCase() + prop.slice(1)}:
-                            <input type="number" id="kf-${prop}" step="${prop === 'opacity' ? '0.1' : prop === 'scale' ? '0.1' : '0.01'}" placeholder="Value">
-                        </label>
-                        <label>Easing:
-                            <select id="ease-${prop}">
-                                <option value="linear">Linear</option>
-                                <option value="easeInOut">Ease In/Out</option>
-                                <option value="bounce">Bounce</option>
-                            </select>
-                        </label>
-                        <button class="action-btn" onclick="Cindara.Motion.addKeyframe(Cindara._state.selected, '${prop}', Cindara._state.currentTime, document.getElementById('kf-${prop}').value, document.getElementById('ease-${prop}').value)">Add Keyframe</button>
-                    `).join('');
-                    panel.innerHTML += `
-                        ${inputs}
-                        <h3>Keyframes</h3>
-                        ${obj.keyframes.map((k, i) => `
-                            <div>
-                                ${k.prop}: ${k.value} at ${k.time}s (${k.easing})
-                                <button class="action-btn" onclick="Cindara.Motion.removeKeyframe(Cindara._state.selected, ${i})">Remove</button>
-                            </div>
-                        `).join('')}
-                    `;
-                    console.log('[Cindara.UI] Motion panel updated.');
-                }
-            },
-
-            // === State ===
-            _state: {
-                mode: '2d',
-                speed: 'fast',
-                themeIndex: 0,
-                snap: false,
-                duration: 5,
-                easing: 'linear',
-                fps: 30,
-                isPlaying: false,
-                loop: false,
-                currentTime: 0,
-                zoom: 1,
-                pan: { x: 0, y: 0 },
-                panStart: { x: 0, y: 0 },
-                darkMode: false,
+                    document.getElementById('canvasContainer').style.background = Cind
