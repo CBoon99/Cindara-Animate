@@ -1,540 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cindara Animate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #6B728E 0%, #A084CA 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        h1 {
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        .section h2 {
-            font-size: 1.25rem;
-            margin-bottom: 10px;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        button, select, input[type="checkbox"] + label, input[type="number"] {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: #fff;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        button:hover, select:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-        button.active, button:active {
-            background: #A084CA;
-            transform: translateY(0);
-        }
-        input[type="checkbox"] {
-            display: none;
-        }
-        input[type="checkbox"] + label {
-            padding: 8px 12px;
-            display: inline-block;
-        }
-        input[type="checkbox"]:checked + label {
-            background: #A084CA;
-        }
-        input[type="number"] {
-            width: 60px;
-        }
-        select {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        .canvas-container {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            height: 300px;
-            position: relative;
-        }
-        canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-        }
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .section {
-                padding: 10px;
-            }
-            button, select, input[type="checkbox"] + label, input[type="number"] {
-                padding: 6px 10px;
-                font-size: 0.85rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Doppleit Animate – Animate in the browser with glitch-style timeline control." />
+  <meta name="keywords" content="animation, timeline, Doppleit, 2D, creative, web animation" />
+  <title>Doppleit Animate</title>
+  <link rel="icon" href="./assets/doppleit_logo_placeholder.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #E6EFFF, #D6C4FF);
+      color: #1A1E2E;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    body.dark {
+      background: linear-gradient(135deg, #1A1E2E, #2A2D4A);
+      color: #E0E0E0;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #logo {
+      max-width: 240px;
+      animation: glitch 1s infinite;
+    }
+    @keyframes glitch {
+      0% { filter: hue-rotate(0deg); }
+      25% { transform: translateX(-1px); }
+      50% { filter: hue-rotate(20deg); transform: translateX(1px); }
+      75% { transform: translateY(-1px); }
+      100% { filter: hue-rotate(0deg); transform: translate(0); }
+    }
+    canvas {
+      display: block;
+      margin: 0 auto 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 800px;
+      height: 500px;
+    }
+    .controls, .state, .export, .timeline-slider {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    button, select, input[type="number"], input[type="range"] {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #A084CA, #6B728E);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    body.dark button, body.dark select, body.dark input[type="number"], body.dark input[type="range"] {
+      background: linear-gradient(135deg, #8A6CB4, #5A6373);
+    }
+    button:hover, select:hover, input[type="range"]:hover {
+      transform: scale(1.05);
+      filter: brightness(1.15);
+    }
+    button.active {
+      background: linear-gradient(135deg, #8A6CB4, #5A6373);
+      transform: scale(1);
+    }
+    body.dark button.active {
+      background: linear-gradient(135deg, #7A5CA4, #4A5363);
+    }
+    input[type="range"] {
+      width: 300px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 20px;
+      transition: color 0.3s ease;
+    }
+    body.dark .footer {
+      color: #aaa;
+    }
+    @media (max-width: 480px) {
+      canvas {
+        height: 300px;
+      }
+      .controls, .state, .export, .timeline-slider {
+        flex-direction: column;
+        align-items: center;
+      }
+      button, select, input[type="number"], input[type="range"] {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Cindara Animate</h1>
+  <div class="header">
+    <h1 style="position:absolute; clip:rect(1px, 1px, 1px, 1px); height:1px;">Doppleit Animate</h1>
+    <img id="logo" src="./assets/doppleit_logo_placeholder.svg" alt="Doppleit Animate Logo">
+  </div>
 
-    <!-- Toolbar Section -->
-    <div class="section" id="toolbar">
-        <h2>Toolbar</h2>
-        <div class="controls">
-            <button id="mode-2d" class="active">2D</button>
-            <button id="mode-3d">3D</button>
-            <button id="speed-fast" class="active">Fast</button>
-            <button id="speed-final">Final</button>
-            <select id="theme">
-                <option value="default">Default</option>
-                <option value="ocean">Ocean</option>
-                <option value="sunset">Sunset</option>
-            </select>
-            <button id="dark-mode">Dark Mode: Off</button>
-        </div>
-    </div>
+  <canvas id="canvas" width="800" height="500"></canvas>
 
-    <!-- Scene Section -->
-    <div class="section" id="scene">
-        <h2>Scene</h2>
-        <div class="controls">
-            <button id="reset-view">Reset View</button>
-            <input type="checkbox" id="toggle-grid">
-            <label for="toggle-grid">Toggle Grid</label>
-            <input type="number" id="duration" min="1" value="1">
-            <select id="easing">
-                <option value="linear">Linear</option>
-                <option value="ease-in">Ease In</option>
-                <option value="ease-out">Ease Out</option>
-            </select>
-            <input type="checkbox" id="snap-to-grid">
-            <label for="snap-to-grid">Snap to Grid</label>
-        </div>
-        <div class="canvas-container">
-            <canvas id="animation-canvas"></canvas>
-        </div>
-    </div>
+  <div class="timeline-slider">
+    <input id="timeline" type="range" min="0" max="5" step="0.01" value="0">
+  </div>
 
-    <!-- Playback Section -->
-    <div class="section" id="playback">
-        <h2>Playback</h2>
-        <div class="controls">
-            <button id="play-pause">Play</button>
-            <button id="stop">Stop</button>
-            <input type="checkbox" id="loop">
-            <label for="loop">Loop</label>
-            <select id="fps">
-                <option value="30">30 FPS</option>
-                <option value="60">60 FPS</option>
-                <option value="120">120 FPS</option>
-            </select>
-        </div>
-    </div>
+  <div class="controls">
+    <button id="play" title="Play Animation">Play</button>
+    <button id="pause" title="Pause Animation">Pause</button>
+    <button id="stop" title="Stop Animation">Stop</button>
+    <label>FPS:<input id="fps" type="number" value="60" min="1" max="144" title="Frames Per Second"></label>
+    <label>Duration:<input id="duration" type="number" value="5" min="1" max="60" title="Animation Duration (seconds)"></label>
+    <button id="theme-toggle" title="Toggle Dark Mode">Dark Mode: Off</button>
+  </div>
 
-    <!-- State Section -->
-    <div class="section" id="state">
-        <h2>State</h2>
-        <div class="controls">
-            <button id="save">Save</button>
-            <button id="load">Load</button>
-            <button id="undo" disabled>Undo</button>
-            <button id="redo" disabled>Redo</button>
-        </div>
-    </div>
+  <div class="state">
+    <button id="save" title="Save State">Save</button>
+    <button id="load" title="Load State">Load</button>
+    <button id="undo" title="Undo Last Action">Undo</button>
+    <button id="redo" title="Redo Last Action">Redo</button>
+  </div>
 
-    <!-- Export Section -->
-    <div class="section" id="export">
-        <h2>Export</h2>
-        <div class="controls">
-            <button id="export-lottie">Lottie</button>
-            <button id="export-cindara">Cindara JSON</button>
-            <button id="export-embed">Embed</button>
-        </div>
-    </div>
+  <div class="export">
+    <button id="export-json" title="Export as JSON">Export JSON</button>
+    <button id="export-embed" title="Export as HTML">Export Embed</button>
+  </div>
 
-    <script>
-        // State Management
-        let is2D = true;
-        let speed = 'fast';
-        let theme = 'default';
-        let isDarkMode = false;
-        let isGridOn = false;
-        let isSnapToGrid = false;
-        let isPlaying = false;
-        let isLooping = false;
-        let fps = 60;
-        let duration = 1;
-        let easing = 'linear';
-        let history = [];
-        let historyIndex = -1;
+  <div class="footer">Doppleit Animate v1.2</div>
 
-        // DOM Elements
-        const mode2D = document.getElementById('mode-2d');
-        const mode3D = document.getElementById('mode-3d');
-        const speedFast = document.getElementById('speed-fast');
-        const speedFinal = document.getElementById('speed-final');
-        const themeSelect = document.getElementById('theme');
-        const darkModeBtn = document.getElementById('dark-mode');
-        const resetViewBtn = document.getElementById('reset-view');
-        const toggleGrid = document.getElementById('toggle-grid');
-        const durationInput = document.getElementById('duration');
-        const easingSelect = document.getElementById('easing');
-        const snapToGrid = document.getElementById('snap-to-grid');
-        const playPauseBtn = document.getElementById('play-pause');
-        const stopBtn = document.getElementById('stop');
-        const loopCheckbox = document.getElementById('loop');
-        const fpsSelect = document.getElementById('fps');
-        const saveBtn = document.getElementById('save');
-        const loadBtn = document.getElementById('load');
-        const undoBtn = document.getElementById('undo');
-        const redoBtn = document.getElementById('redo');
-        const exportLottieBtn = document.getElementById('export-lottie');
-        const exportCindaraBtn = document.getElementById('export-cindara');
-        const exportEmbedBtn = document.getElementById('export-embed');
-        const canvas = document.getElementById('animation-canvas');
-        const ctx = canvas.getContext('2d');
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let time = 0;
+    let playing = false;
+    let fps = 60;
+    let duration = 5;
+    let lastRender = 0;
+    let isDarkMode = false;
+    let undoStack = [];
+    let redoStack = [];
 
-        // Canvas Setup
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        let animationFrame;
+    const playBtn = document.getElementById('play');
+    const pauseBtn = document.getElementById('pause');
+    const stopBtn = document.getElementById('stop');
+    const fpsInput = document.getElementById('fps');
+    const durationInput = document.getElementById('duration');
+    const timeline = document.getElementById('timeline');
+    const themeToggle = document.getElementById('theme-toggle');
+    const saveBtn = document.getElementById('save');
+    const loadBtn = document.getElementById('load');
+    const undoBtn = document.getElementById('undo');
+    const redoBtn = document.getElementById('redo');
+    const exportJsonBtn = document.getElementById('export-json');
+    const exportEmbedBtn = document.getElementById('export-embed');
 
-        // Theme Update
-        function updateTheme() {
-            const colors = {
-                default: { bg: 'linear-gradient(135deg, #6B728E 0%, #A084CA 100%)', text: '#fff' },
-                ocean: { bg: 'linear-gradient(135deg, #2A9D8F 0%, #264653 100%)', text: '#fff' },
-                sunset: { bg: 'linear-gradient(135deg, #F4A261 0%, #E76F51 100%)', text: '#fff' }
-            };
-            document.body.style.background = colors[theme].bg;
-            document.body.style.color = colors[theme].text;
+    // ARIA for Timeline Slider
+    timeline.setAttribute('aria-label', 'Animation timeline slider');
+    timeline.setAttribute('aria-valuemin', 0);
+    timeline.setAttribute('aria-valuemax', duration);
+    timeline.setAttribute('aria-valuenow', time);
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 14px;background:#000;color:#fff;border-radius:8px;opacity:0.9;font-size:0.85rem;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2000);
+    }
+
+    function saveStateForUndo() {
+      undoStack.push({ time, fps, duration });
+      if (undoStack.length > 50) undoStack.shift(); // Limit memory
+      redoStack = []; // Clear redo after new action
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const x = 400 + Math.sin(time * 2 * Math.PI / duration) * 200;
+      const y = 250;
+      ctx.beginPath();
+      ctx.arc(x, y, 30, 0, Math.PI * 2);
+      ctx.fillStyle = '#A084CA';
+      ctx.fill();
+      timeline.setAttribute('aria-valuenow', time);
+    }
+
+    function animate(timestamp) {
+      if (!playing) return;
+      if (timestamp - lastRender < 1000 / fps) {
+        requestAnimationFrame(animate);
+        return;
+      }
+      lastRender = timestamp;
+      time += 1 / fps;
+      if (time > duration) time = 0;
+      timeline.value = time;
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark', isDarkMode);
+      themeToggle.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
+      themeToggle.classList.toggle('active', isDarkMode);
+    }
+
+    playBtn.onclick = () => {
+      playing = true;
+      lastRender = performance.now();
+      saveStateForUndo();
+      playBtn.classList.add('active');
+      pauseBtn.classList.remove('active');
+      requestAnimationFrame(animate);
+    };
+    pauseBtn.onclick = () => {
+      playing = false;
+      saveStateForUndo();
+      playBtn.classList.remove('active');
+      pauseBtn.classList.add('active');
+    };
+    stopBtn.onclick = () => {
+      time = 0;
+      playing = false;
+      saveStateForUndo();
+      playBtn.classList.remove('active');
+      pauseBtn.classList.remove('active');
+      timeline.value = 0;
+      draw();
+    };
+    fpsInput.oninput = () => {
+      saveStateForUndo();
+      fps = parseInt(fpsInput.value);
+    };
+    durationInput.oninput = () => {
+      saveStateForUndo();
+      duration = parseFloat(durationInput.value);
+      timeline.max = duration;
+      timeline.setAttribute('aria-valuemax', duration);
+    };
+    timeline.oninput = () => {
+      time = parseFloat(timeline.value);
+      draw();
+    };
+    themeToggle.onclick = toggleDarkMode;
+    saveBtn.onclick = () => {
+      const state = { time, fps, duration };
+      localStorage.setItem('doppleit-animate-state', JSON.stringify(state));
+      showToast("Saved!");
+    };
+    loadBtn.onclick = () => {
+      try {
+        const state = JSON.parse(localStorage.getItem('doppleit-animate-state'));
+        if (state) {
+          time = state.time || 0;
+          fps = state.fps || 60;
+          duration = state.duration || 5;
+          fpsInput.value = fps;
+          durationInput.value = duration;
+          timeline.max = duration;
+          timeline.setAttribute('aria-valuemax', duration);
+          timeline.value = time;
+          draw();
+          showToast("Loaded!");
         }
+      } catch (e) {
+        showToast("Failed to load state.");
+      }
+    };
+    undoBtn.onclick = () => {
+      if (!undoStack.length) return;
+      redoStack.push({ time, fps, duration });
+      const prev = undoStack.pop();
+      time = prev.time; fps = prev.fps; duration = prev.duration;
+      fpsInput.value = fps;
+      durationInput.value = duration;
+      timeline.max = duration;
+      timeline.value = time;
+      draw();
+    };
+    redoBtn.onclick = () => {
+      if (!redoStack.length) return;
+      undoStack.push({ time, fps, duration });
+      const next = redoStack.pop();
+      time = next.time; fps = next.fps; duration = next.duration;
+      fpsInput.value = fps;
+      durationInput.value = duration;
+      timeline.max = duration;
+      timeline.value = time;
+      draw();
+    };
+    exportJsonBtn.onclick = () => {
+      const data = { time, fps, duration };
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'doppleit-animate.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    exportEmbedBtn.onclick = () => {
+      showToast("Export embed coming in v1.3");
+    };
 
-        // Dark Mode Toggle
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            darkModeBtn.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
-            document.body.style.filter = isDarkMode ? 'invert(1) hue-rotate(180deg)' : 'none';
-            document.querySelectorAll('.section').forEach(section => {
-                section.style.filter = isDarkMode ? 'invert(1) hue-rotate(180deg)' : 'none';
-            });
-        }
-
-        // History Management
-        function saveState() {
-            history = history.slice(0, historyIndex + 1);
-            history.push({ is2D, speed, theme, isDarkMode, isGridOn, isSnapToGrid, duration, easing });
-            historyIndex++;
-            updateHistoryButtons();
-        }
-
-        function updateHistoryButtons() {
-            undoBtn.disabled = historyIndex <= 0;
-            redoBtn.disabled = historyIndex >= history.length - 1;
-        }
-
-        function undo() {
-            if (historyIndex > 0) {
-                historyIndex--;
-                applyState(history[historyIndex]);
-            }
-        }
-
-        function redo() {
-            if (historyIndex < history.length - 1) {
-                historyIndex++;
-                applyState(history[historyIndex]);
-            }
-        }
-
-        function applyState(state) {
-            is2D = state.is2D;
-            speed = state.speed;
-            theme = state.theme;
-            isDarkMode = state.isDarkMode;
-            isGridOn = state.isGridOn;
-            isSnapToGrid = state.isSnapToGrid;
-            duration = state.duration;
-            easing = state.easing;
-
-            mode2D.classList.toggle('active', is2D);
-            mode3D.classList.toggle('active', !is2D);
-            speedFast.classList.toggle('active', speed === 'fast');
-            speedFinal.classList.toggle('active', speed === 'final');
-            themeSelect.value = theme;
-            darkModeBtn.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
-            toggleGrid.checked = isGridOn;
-            snapToGrid.checked = isSnapToGrid;
-            durationInput.value = duration;
-            easingSelect.value = easing;
-
-            updateTheme();
-            if (isDarkMode) toggleDarkMode();
-            updateHistoryButtons();
-        }
-
-        // Animation Loop
-        let time = 0;
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Grid
-            if (isGridOn) {
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                for (let x = 0; x < canvas.width; x += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, canvas.height);
-                    ctx.stroke();
-                }
-                for (let y = 0; y < canvas.height; y += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                    ctx.stroke();
-                }
-            }
-
-            // Draw Animated Object
-            ctx.fillStyle = '#A084CA';
-            const x = canvas.width / 2 + Math.sin(time) * 100;
-            const y = canvas.height / 2;
-            ctx.beginPath();
-            ctx.arc(x, y, 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (isPlaying) {
-                time += 0.05 * (speed === 'fast' ? 2 : 1);
-                if (time > duration && !isLooping) {
-                    stopAnimation();
-                }
-            }
-
-            animationFrame = requestAnimationFrame(animate);
-        }
-
-        function playAnimation() {
-            isPlaying = true;
-            playPauseBtn.textContent = 'Pause';
-            playPauseBtn.classList.add('active');
-            animate();
-        }
-
-        function pauseAnimation() {
-            isPlaying = false;
-            playPauseBtn.textContent = 'Play';
-            playPauseBtn.classList.remove('active');
-        }
-
-        function stopAnimation() {
-            isPlaying = false;
-            time = 0;
-            playPauseBtn.textContent = 'Play';
-            playPauseBtn.classList.remove('active');
-            cancelAnimationFrame(animationFrame);
-            animate();
-        }
-
-        // Event Listeners
-        mode2D.addEventListener('click', () => {
-            is2D = true;
-            mode2D.classList.add('active');
-            mode3D.classList.remove('active');
-            saveState();
-        });
-
-        mode3D.addEventListener('click', () => {
-            is2D = false;
-            mode3D.classList.add('active');
-            mode2D.classList.remove('active');
-            saveState();
-        });
-
-        speedFast.addEventListener('click', () => {
-            speed = 'fast';
-            speedFast.classList.add('active');
-            speedFinal.classList.remove('active');
-            saveState();
-        });
-
-        speedFinal.addEventListener('click', () => {
-            speed = 'final';
-            speedFinal.classList.add('active');
-            speedFast.classList.remove('active');
-            saveState();
-        });
-
-        themeSelect.addEventListener('change', () => {
-            theme = themeSelect.value;
-            updateTheme();
-            saveState();
-        });
-
-        darkModeBtn.addEventListener('click', () => {
-            toggleDarkMode();
-            saveState();
-        });
-
-        resetViewBtn.addEventListener('click', () => {
-            time = 0;
-            animate();
-        });
-
-        toggleGrid.addEventListener('change', () => {
-            isGridOn = toggleGrid.checked;
-            saveState();
-        });
-
-        durationInput.addEventListener('input', () => {
-            duration = Math.max(1, parseInt(durationInput.value));
-            durationInput.value = duration;
-            saveState();
-        });
-
-        easingSelect.addEventListener('change', () => {
-            easing = easingSelect.value;
-            saveState();
-        });
-
-        snapToGrid.addEventListener('change', () => {
-            isSnapToGrid = snapToGrid.checked;
-            saveState();
-        });
-
-        playPauseBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                pauseAnimation();
-            } else {
-                playAnimation();
-            }
-        });
-
-        stopBtn.addEventListener('click', stopAnimation);
-
-        loopCheckbox.addEventListener('change', () => {
-            isLooping = loopCheckbox.checked;
-        });
-
-        fpsSelect.addEventListener('change', () => {
-            fps = parseInt(fpsSelect.value);
-        });
-
-        saveBtn.addEventListener('click', () => {
-            const state = { is2D, speed, theme, isDarkMode, isGridOn, isSnapToGrid, duration, easing };
-            localStorage.setItem('cindara-state', JSON.stringify(state));
-        });
-
-        loadBtn.addEventListener('click', () => {
-            const savedState = localStorage.getItem('cindara-state');
-            if (savedState) {
-                applyState(JSON.parse(savedState));
-            }
-        });
-
-        undoBtn.addEventListener('click', undo);
-        redoBtn.addEventListener('click', redo);
-
-        exportLottieBtn.addEventListener('click', () => {
-            const lottieData = { version: "5.7.1", animation: { duration, easing } };
-            const blob = new Blob([JSON.stringify(lottieData)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'animation.lottie.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        exportCindaraBtn.addEventListener('click', () => {
-            const state = { is2D, speed, theme, isDarkMode, isGridOn, isSnapToGrid, duration, easing };
-            const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'cindara-project.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        exportEmbedBtn.addEventListener('click', () => {
-            const embedCode = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Cindara Animation</title>
-                <style>
-                    body { margin: 0; background: #000; }
-                    canvas { width: 100%; height: 100vh; }
-                </style>
-            </head>
-            <body>
-                <canvas id="embed-canvas"></canvas>
-                <script>
-                    const canvas = document.getElementById('embed-canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    let time = 0;
-                    function animate() {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.fillStyle = '#A084CA';
-                        const x = canvas.width / 2 + Math.sin(time) * 100;
-                        const y = canvas.height / 2;
-                        ctx.beginPath();
-                        ctx.arc(x, y, 20, 0, Math.PI * 2);
-                        ctx.fill();
-                        time += 0.05;
-                        requestAnimationFrame(animate);
-                    }
-                    animate();
-                </script>
-            </body>
-            </html>`;
-            const blob = new Blob([embedCode], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'cindara-embed.html';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        // Initial Setup
-        updateTheme();
-        animate();
-        saveState();
-    </script>
+    // Initialize
+    draw();
+  </script>
 </body>
 </html>
