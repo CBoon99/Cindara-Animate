@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Doppleit Animate – Animate in the browser with glitch-style timeline control." />
-  <meta name="keywords" content="animation, timeline, Doppleit, 2D, creative, web animation" />
+  <meta name="description" content="Doppleit Animate – A browser-based 3D animation tool with glitch-style timeline control." />
+  <meta name="keywords" content="animation, timeline, Doppleit, 3D, creative, web animation" />
   <title>Doppleit Animate</title>
   <link rel="icon" href="./assets/doppleit_logo_placeholder.svg" type="image/svg+xml">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -44,17 +45,15 @@
       75% { transform: translateY(-1px); }
       100% { filter: hue-rotate(0deg); transform: translate(0); }
     }
-    canvas {
-      display: block;
-      margin: 0 auto 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    #scene {
       width: 100%;
       max-width: 800px;
       height: 500px;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
-    .controls, .state, .export, .timeline-slider {
+    .controls, .state, .export, .timeline-slider, .objects {
       display: flex;
       justify-content: center;
       gap: 12px;
@@ -98,10 +97,10 @@
       color: #aaa;
     }
     @media (max-width: 480px) {
-      canvas {
+      #scene {
         height: 300px;
       }
-      .controls, .state, .export, .timeline-slider {
+      .controls, .state, .export, .timeline-slider, .objects {
         flex-direction: column;
         align-items: center;
       }
@@ -118,7 +117,7 @@
     <img id="logo" src="./assets/doppleit_logo_placeholder.svg" alt="Doppleit Animate Logo">
   </div>
 
-  <canvas id="canvas" width="800" height="500"></canvas>
+  <div id="scene"></div>
 
   <div class="timeline-slider">
     <input id="timeline" type="range" min="0" max="5" step="0.01" value="0">
@@ -133,7 +132,16 @@
     <button id="theme-toggle" title="Toggle Dark Mode">Dark Mode: Off</button>
   </div>
 
+  <div class="objects">
+    <button id="add-cube" title="Add Cube">Add Cube</button>
+    <button id="add-sphere" title="Add Sphere">Add Sphere</button>
+    <label>Move X:<input id="move-x" type="number" value="0" step="0.1"></label>
+    <label>Move Y:<input id="move-y" type="number" value="0" step="0.1"></label>
+    <label>Move Z:<input id="move-z" type="number" value="0" step="0.1"></label>
+  </div>
+
   <div class="state">
+    <button id="set-keyframe" title="Set Keyframe">Set Keyframe</button>
     <button id="save" title="Save State">Save</button>
     <button id="load" title="Load State">Load</button>
     <button id="undo" title="Undo Last Action">Undo</button>
@@ -145,186 +153,332 @@
     <button id="export-embed" title="Export as HTML">Export Embed</button>
   </div>
 
-  <div class="footer">Doppleit Animate v1.2</div>
+  <div class="footer">Doppleit Animate v2.0</div>
 
   <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let time = 0;
-    let playing = false;
-    let fps = 60;
-    let duration = 5;
-    let lastRender = 0;
-    let isDarkMode = false;
-    let undoStack = [];
-    let redoStack = [];
+    document.addEventListener('DOMContentLoaded', () => {
+      // Three.js Setup
+      const sceneContainer = document.getElementById('scene');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, sceneContainer.clientWidth / 500, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(sceneContainer.clientWidth, 500);
+      sceneContainer.appendChild(renderer.domElement);
 
-    const playBtn = document.getElementById('play');
-    const pauseBtn = document.getElementById('pause');
-    const stopBtn = document.getElementById('stop');
-    const fpsInput = document.getElementById('fps');
-    const durationInput = document.getElementById('duration');
-    const timeline = document.getElementById('timeline');
-    const themeToggle = document.getElementById('theme-toggle');
-    const saveBtn = document.getElementById('save');
-    const loadBtn = document.getElementById('load');
-    const undoBtn = document.getElementById('undo');
-    const redoBtn = document.getElementById('redo');
-    const exportJsonBtn = document.getElementById('export-json');
-    const exportEmbedBtn = document.getElementById('export-embed');
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(1, 1, 1);
+      scene.add(ambientLight);
+      scene.add(directionalLight);
 
-    // ARIA for Timeline Slider
-    timeline.setAttribute('aria-label', 'Animation timeline slider');
-    timeline.setAttribute('aria-valuemin', 0);
-    timeline.setAttribute('aria-valuemax', duration);
-    timeline.setAttribute('aria-valuenow', time);
+      // Camera Position
+      camera.position.z = 5;
 
-    function showToast(msg) {
-      const t = document.createElement('div');
-      t.textContent = msg;
-      t.style = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 14px;background:#000;color:#fff;border-radius:8px;opacity:0.9;font-size:0.85rem;';
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2000);
-    }
+      // State
+      let time = 0;
+      let playing = false;
+      let fps = 60;
+      let duration = 5;
+      let lastRender = 0;
+      let isDarkMode = false;
+      let objects = [];
+      let keyframes = [];
+      let undoStack = [];
+      let redoStack = [];
+      let selectedObject = null;
 
-    function saveStateForUndo() {
-      undoStack.push({ time, fps, duration });
-      if (undoStack.length > 50) undoStack.shift(); // Limit memory
-      redoStack = []; // Clear redo after new action
-    }
+      // DOM Elements
+      const playBtn = document.getElementById('play');
+      const pauseBtn = document.getElementById('pause');
+      const stopBtn = document.getElementById('stop');
+      const fpsInput = document.getElementById('fps');
+      const durationInput = document.getElementById('duration');
+      const timeline = document.getElementById('timeline');
+      const themeToggle = document.getElementById('theme-toggle');
+      const addCubeBtn = document.getElementById('add-cube');
+      const addSphereBtn = document.getElementById('add-sphere');
+      const moveXInput = document.getElementById('move-x');
+      const moveYInput = document.getElementById('move-y');
+      const moveZInput = document.getElementById('move-z');
+      const setKeyframeBtn = document.getElementById('set-keyframe');
+      const saveBtn = document.getElementById('save');
+      const loadBtn = document.getElementById('load');
+      const undoBtn = document.getElementById('undo');
+      const redoBtn = document.getElementById('redo');
+      const exportJsonBtn = document.getElementById('export-json');
+      const exportEmbedBtn = document.getElementById('export-embed');
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const x = 400 + Math.sin(time * 2 * Math.PI / duration) * 200;
-      const y = 250;
-      ctx.beginPath();
-      ctx.arc(x, y, 30, 0, Math.PI * 2);
-      ctx.fillStyle = '#A084CA';
-      ctx.fill();
-      timeline.setAttribute('aria-valuenow', time);
-    }
-
-    function animate(timestamp) {
-      if (!playing) return;
-      if (timestamp - lastRender < 1000 / fps) {
-        requestAnimationFrame(animate);
-        return;
-      }
-      lastRender = timestamp;
-      time += 1 / fps;
-      if (time > duration) time = 0;
-      timeline.value = time;
-      draw();
-      requestAnimationFrame(animate);
-    }
-
-    function toggleDarkMode() {
-      isDarkMode = !isDarkMode;
-      document.body.classList.toggle('dark', isDarkMode);
-      themeToggle.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
-      themeToggle.classList.toggle('active', isDarkMode);
-    }
-
-    playBtn.onclick = () => {
-      playing = true;
-      lastRender = performance.now();
-      saveStateForUndo();
-      playBtn.classList.add('active');
-      pauseBtn.classList.remove('active');
-      requestAnimationFrame(animate);
-    };
-    pauseBtn.onclick = () => {
-      playing = false;
-      saveStateForUndo();
-      playBtn.classList.remove('active');
-      pauseBtn.classList.add('active');
-    };
-    stopBtn.onclick = () => {
-      time = 0;
-      playing = false;
-      saveStateForUndo();
-      playBtn.classList.remove('active');
-      pauseBtn.classList.remove('active');
-      timeline.value = 0;
-      draw();
-    };
-    fpsInput.oninput = () => {
-      saveStateForUndo();
-      fps = parseInt(fpsInput.value);
-    };
-    durationInput.oninput = () => {
-      saveStateForUndo();
-      duration = parseFloat(durationInput.value);
-      timeline.max = duration;
+      // ARIA for Timeline Slider
+      timeline.setAttribute('aria-label', 'Animation timeline slider');
+      timeline.setAttribute('aria-valuemin', 0);
       timeline.setAttribute('aria-valuemax', duration);
-    };
-    timeline.oninput = () => {
-      time = parseFloat(timeline.value);
-      draw();
-    };
-    themeToggle.onclick = toggleDarkMode;
-    saveBtn.onclick = () => {
-      const state = { time, fps, duration };
-      localStorage.setItem('doppleit-animate-state', JSON.stringify(state));
-      showToast("Saved!");
-    };
-    loadBtn.onclick = () => {
-      try {
-        const state = JSON.parse(localStorage.getItem('doppleit-animate-state'));
-        if (state) {
-          time = state.time || 0;
-          fps = state.fps || 60;
-          duration = state.duration || 5;
-          fpsInput.value = fps;
-          durationInput.value = duration;
-          timeline.max = duration;
-          timeline.setAttribute('aria-valuemax', duration);
-          timeline.value = time;
-          draw();
-          showToast("Loaded!");
-        }
-      } catch (e) {
-        showToast("Failed to load state.");
-      }
-    };
-    undoBtn.onclick = () => {
-      if (!undoStack.length) return;
-      redoStack.push({ time, fps, duration });
-      const prev = undoStack.pop();
-      time = prev.time; fps = prev.fps; duration = prev.duration;
-      fpsInput.value = fps;
-      durationInput.value = duration;
-      timeline.max = duration;
-      timeline.value = time;
-      draw();
-    };
-    redoBtn.onclick = () => {
-      if (!redoStack.length) return;
-      undoStack.push({ time, fps, duration });
-      const next = redoStack.pop();
-      time = next.time; fps = next.fps; duration = next.duration;
-      fpsInput.value = fps;
-      durationInput.value = duration;
-      timeline.max = duration;
-      timeline.value = time;
-      draw();
-    };
-    exportJsonBtn.onclick = () => {
-      const data = { time, fps, duration };
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'doppleit-animate.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    };
-    exportEmbedBtn.onclick = () => {
-      showToast("Export embed coming in v1.3");
-    };
+      timeline.setAttribute('aria-valuenow', time);
 
-    // Initialize
-    draw();
+      function showToast(msg) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 14px;background:#000;color:#fff;border-radius:8px;opacity:0.9;font-size:0.85rem;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2000);
+      }
+
+      function saveStateForUndo() {
+        undoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
+        if (undoStack.length > 50) undoStack.shift();
+        redoStack = [];
+      }
+
+      function addObject(type) {
+        const geometry = type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
+        const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(0, 0, 0);
+        scene.add(mesh);
+        objects.push({ mesh, type, keyframes: [] });
+        selectedObject = objects[objects.length - 1];
+        moveXInput.value = 0;
+        moveYInput.value = 0;
+        moveZInput.value = 0;
+        saveStateForUndo();
+      }
+
+      function interpolateKeyframes(obj, t) {
+        const objKeyframes = obj.keyframes;
+        if (objKeyframes.length < 2) return;
+        const sortedKeyframes = objKeyframes.sort((a, b) => a.time - b.time);
+        let startKf = sortedKeyframes[0];
+        let endKf = sortedKeyframes[sortedKeyframes.length - 1];
+        for (let i = 0; i < sortedKeyframes.length - 1; i++) {
+          if (t >= sortedKeyframes[i].time && t <= sortedKeyframes[i + 1].time) {
+            startKf = sortedKeyframes[i];
+            endKf = sortedKeyframes[i + 1];
+            break;
+          }
+        }
+        const fraction = (t - startKf.time) / (endKf.time - startKf.time);
+        obj.mesh.position.x = startKf.position.x + (endKf.position.x - startKf.position.x) * fraction;
+        obj.mesh.position.y = startKf.position.y + (endKf.position.y - startKf.position.y) * fraction;
+        obj.mesh.position.z = startKf.position.z + (endKf.position.z - startKf.position.z) * fraction;
+      }
+
+      function animate(timestamp) {
+        if (!playing) return;
+        if (timestamp - lastRender < 1000 / fps) {
+          requestAnimationFrame(animate);
+          return;
+        }
+        lastRender = timestamp;
+        time += 1 / fps;
+        if (time > duration) time = 0;
+        timeline.value = time;
+        timeline.setAttribute('aria-valuenow', time);
+        objects.forEach(obj => interpolateKeyframes(obj, time));
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark', isDarkMode);
+        themeToggle.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
+        themeToggle.classList.toggle('active', isDarkMode);
+      }
+
+      // Event Listeners
+      playBtn.onclick = () => {
+        playing = true;
+        lastRender = performance.now();
+        saveStateForUndo();
+        playBtn.classList.add('active');
+        pauseBtn.classList.remove('active');
+        requestAnimationFrame(animate);
+      };
+      pauseBtn.onclick = () => {
+        playing = false;
+        saveStateForUndo();
+        playBtn.classList.remove('active');
+        pauseBtn.classList.add('active');
+      };
+      stopBtn.onclick = () => {
+        time = 0;
+        playing = false;
+        saveStateForUndo();
+        playBtn.classList.remove('active');
+        pauseBtn.classList.remove('active');
+        timeline.value = 0;
+        objects.forEach(obj => interpolateKeyframes(obj, time));
+        renderer.render(scene, camera);
+      };
+      fpsInput.oninput = () => {
+        saveStateForUndo();
+        fps = parseInt(fpsInput.value);
+      };
+      durationInput.oninput = () => {
+        saveStateForUndo();
+        duration = parseFloat(durationInput.value);
+        timeline.max = duration;
+        timeline.setAttribute('aria-valuemax', duration);
+      };
+      timeline.oninput = () => {
+        time = parseFloat(timeline.value);
+        objects.forEach(obj => interpolateKeyframes(obj, time));
+        renderer.render(scene, camera);
+      };
+      themeToggle.onclick = toggleDarkMode;
+      addCubeBtn.onclick = () => addObject('cube');
+      addSphereBtn.onclick = () => addObject('sphere');
+      moveXInput.oninput = () => {
+        if (selectedObject) {
+          selectedObject.mesh.position.x = parseFloat(moveXInput.value);
+          renderer.render(scene, camera);
+        }
+      };
+      moveYInput.oninput = () => {
+        if (selectedObject) {
+          selectedObject.mesh.position.y = parseFloat(moveYInput.value);
+          renderer.render(scene, camera);
+        }
+      };
+      moveZInput.oninput = () => {
+        if (selectedObject) {
+          selectedObject.mesh.position.z = parseFloat(moveZInput.value);
+          renderer.render(scene, camera);
+        }
+      };
+      setKeyframeBtn.onclick = () => {
+        if (selectedObject) {
+          selectedObject.keyframes.push({
+            time: parseFloat(timeline.value),
+            position: {
+              x: selectedObject.mesh.position.x,
+              y: selectedObject.mesh.position.y,
+              z: selectedObject.mesh.position.z
+            }
+          });
+          saveStateForUndo();
+          showToast("Keyframe set!");
+        }
+      };
+      saveBtn.onclick = () => {
+        const state = { time, fps, duration, objects, keyframes };
+        localStorage.setItem('doppleit-animate-state', JSON.stringify(state));
+        showToast("Saved!");
+      };
+      loadBtn.onclick = () => {
+        try {
+          const state = JSON.parse(localStorage.getItem('doppleit-animate-state'));
+          if (state) {
+            time = state.time || 0;
+            fps = state.fps || 60;
+            duration = state.duration || 5;
+            fpsInput.value = fps;
+            durationInput.value = duration;
+            timeline.max = duration;
+            timeline.setAttribute('aria-valuemax', duration);
+            timeline.value = time;
+            // Clear existing objects
+            objects.forEach(obj => scene.remove(obj.mesh));
+            objects = [];
+            state.objects.forEach(objData => {
+              const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
+              const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
+              const mesh = new THREE.Mesh(geometry, material);
+              mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
+              scene.add(mesh);
+              objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
+            });
+            keyframes = state.keyframes || [];
+            selectedObject = objects.length ? objects[objects.length - 1] : null;
+            if (selectedObject) {
+              moveXInput.value = selectedObject.mesh.position.x;
+              moveYInput.value = selectedObject.mesh.position.y;
+              moveZInput.value = selectedObject.mesh.position.z;
+            }
+            renderer.render(scene, camera);
+            showToast("Loaded!");
+          }
+        } catch (e) {
+          showToast("Failed to load state.");
+        }
+      };
+      undoBtn.onclick = () => {
+        if (!undoStack.length) return;
+        redoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
+        const prev = undoStack.pop();
+        time = prev.time;
+        fps = prev.fps;
+        duration = prev.duration;
+        fpsInput.value = fps;
+        durationInput.value = duration;
+        timeline.max = duration;
+        timeline.value = time;
+        objects.forEach(obj => scene.remove(obj.mesh));
+        objects = [];
+        prev.objects.forEach(objData => {
+          const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
+          const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
+          scene.add(mesh);
+          objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
+        });
+        keyframes = prev.keyframes;
+        selectedObject = objects.length ? objects[objects.length - 1] : null;
+        renderer.render(scene, camera);
+      };
+      redoBtn.onclick = () => {
+        if (!redoStack.length) return;
+        undoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
+        const next = redoStack.pop();
+        time = next.time;
+        fps = next.fps;
+        duration = next.duration;
+        fpsInput.value = fps;
+        durationInput.value = duration;
+        timeline.max = duration;
+        timeline.value = time;
+        objects.forEach(obj => scene.remove(obj.mesh));
+        objects = [];
+        next.objects.forEach(objData => {
+          const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
+          const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
+          scene.add(mesh);
+          objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
+        });
+        keyframes = next.keyframes;
+        selectedObject = objects.length ? objects[objects.length - 1] : null;
+        renderer.render(scene, camera);
+      };
+      exportJsonBtn.onclick = () => {
+        const data = { time, fps, duration, objects, keyframes };
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'doppleit-animate.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      exportEmbedBtn.onclick = () => {
+        showToast("Export embed coming soon!");
+      };
+
+      // Initial Render
+      renderer.render(scene, camera);
+
+      // Resize Handler
+      window.addEventListener('resize', () => {
+        const width = sceneContainer.clientWidth;
+        const height = window.innerWidth <= 480 ? 300 : 500;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
+      });
+    });
   </script>
 </body>
 </html>
