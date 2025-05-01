@@ -1,67 +1,114 @@
-# Doppleit Animate
-*A glitch-style 2D animation playground built entirely in a single file.*
+# Doppleit Animate Pro v2.2
 
-## Overview
-
-Doppleit Animate is a lightweight, in-browser 2D animation tool focused on providing a creative and intuitive animation experience with a unique glitch-style timeline control. Built entirely within a single HTML file (Doppleit-style!), it offers basic animation capabilities, state saving/loading, and evolving export tools.
-
-## Features
-
-* **Glitch-Enhanced UI:** A visually engaging interface with a subtle glitch effect on the logo, matching the Doppleit Suite aesthetic.
-* **Canvas-Based Animation:** Real-time rendering on a clean, responsive canvas.
-* **Interactive Timeline:** Scrub through the animation using a smooth slider synced to duration.
-* **Playback Controls:** **Play**, **Pause**, and **Stop** with active state visuals.
-* **FPS & Duration:** Adjustable **Frames Per Second** and total animation length.
-* **Dark Mode:** Toggle between light/dark themes with Doppleit Suite gradients.
-* **State Management:** Save/Load current state via `localStorage`, with toast feedback.
-* **Undo/Redo Scaffold:** History tracking system scaffolded (full support in v1.3).
-* **Export Tools:**
-  * **Export JSON:** Download your current animation parameters.
-  * **Embed Export (Coming Soon):** Generate a shareable HTML version of your animation.
-* **Accessibility Enhancements:**
-  * `title` attributes on buttons.
-  * ARIA support on timeline slider.
-
-## Built With
-
-- HTML5
-- CSS3
-- JavaScript (Vanilla)
-
-## Getting Started
-
-1. **Download:** Save the `index.html` file to your local machine.
-2. **Open in Browser:** Open the `index.html` file in any modern web browser.
-3. Start animating — no setup required!
-
-## Usage
-
-- **Timeline:** Use the slider to scrub through your animation.
-- **Playback:** Hit **Play** to animate, **Pause** to hold, **Stop** to reset.
-- **FPS & Duration:** Adjust animation speed and length in real time.
-- **Dark Mode:** Toggle on/off for light-sensitive environments.
-- **State:** Use **Save** and **Load** for local state persistence.
-- **Undo/Redo:** Step back and forward through recent changes (early implementation).
-- **Export:** Download settings as JSON. Embed HTML export coming in v1.3.
-
-## What's Next (v1.3+)
-
-- Full Undo/Redo functionality with multi-step history.
-- Keyframe support and basic animation curve editing.
-- More drawing primitives and motion styles.
-- Embeddable animated viewer (HTML export).
-- Enhanced accessibility and mobile refinement.
-
-## License
-
-[Optional: Add license details here]
-
-## Acknowledgements
-
-- Inspired by the simplicity of in-browser tools.
-- Uses `requestAnimationFrame` for smooth, hardware-synced animation.
+Doppleit Animate Pro is a browser-based 3D animation editor built with Three.js.  
+It features keyframe animation, layer grouping, timeline controls, color and camera animation, and full HTML/JSON export.
 
 ---
 
-Made with love by the Doppleit Suite team. 🧡  
-[ doppleit-animate.netlify.app ] — live soon.
+## 🚀 Live Features
+
+### ✅ Animation System
+- Position, Rotation, Scale, and Color keyframes
+- Easing functions (linear, ease-in/out)
+- Camera keyframe animation
+- Timeline playback marker and scrubber
+- Drag-and-drop timeline keyframes
+- Zoomable timeline and snap mode
+- Layer-based animation group system
+
+### ✅ Scene Editing
+- Add Cube, Sphere, Plane objects
+- Transform inputs: position, rotation, scale
+- Color picker per object
+- Object selection and layer assignment
+
+### ✅ UI/UX
+- Doppleit glitch branding
+- Responsive design for mobile
+- Light/dark mode toggle
+- Visual playback marker
+- Undo/Redo with deep scene state
+
+### ✅ Export / Save
+- Save/load scene to/from localStorage
+- Export JSON (for future loading)
+- Export full embedded HTML animation
+- All data: camera, easing, groups, keyframes included
+
+---
+
+## 📖 How to Use
+
+### 🧱 Adding Objects
+- Use "Add Cube", "Add Sphere", or "Add Plane" to insert new objects
+- Objects default to Layer 1 (can be reassigned)
+
+### 🎨 Editing Objects
+- Select from dropdown list or by adding new object
+- Use inputs to move, rotate, scale, or recolor
+- Values update live in the scene
+
+### 🎬 Creating Animation
+1. Move the timeline slider to your desired time
+2. Edit object position/rotation/scale/color
+3. Click **Set Keyframe**
+4. Select easing function if desired
+
+### 🎥 Camera Animation
+- Camera position & rotation are keyframed automatically
+- Will interpolate with easing during playback
+
+### 🧭 Timeline Tools
+- Use playback controls to preview
+- Drag keyframe markers to reposition in time
+- Toggle **Snap** for frame alignment
+- Use **Zoom** to see more or less of the timeline
+
+### 📁 Layers / Groups
+- Rename layers
+- Add/Delete groups
+- Assign objects to groups
+- Group info included in export
+
+### 💾 Saving & Loading
+- Click **Save** to store to browser
+- Click **Load** to restore previous scene
+- Uses `localStorage`, so persists across sessions (in same browser)
+
+### 📤 Exporting
+- **Export JSON**: full scene and timeline data
+- **Export Embed**: generates standalone `.html` animation (playback only)
+
+---
+
+## 🔧 Project Details
+
+- Framework: None (Vanilla JS)
+- Engine: [Three.js r161](https://threejs.org/)
+- File: Single HTML file (self-contained)
+- License: MIT
+
+---
+
+## 📦 Deployment
+
+You can deploy the `.html` file to:
+- GitHub Pages
+- Netlify / Vercel
+- Or open it locally in any browser
+
+---
+
+## 🧪 Coming Soon Ideas
+
+- Draggable timeline keyframe editor
+- Audio and event triggers
+- Per-layer playback toggle
+- More easing options and custom curves
+- Image/text layer support
+
+---
+
+## 🙌 Created by Carl (Doppleit Labs)
+
+> Software that reflects your creativity.

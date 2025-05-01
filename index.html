@@ -1,484 +1,1110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Doppleit Animate – A browser-based 3D animation tool with glitch-style timeline control." />
-  <meta name="keywords" content="animation, timeline, Doppleit, 3D, creative, web animation" />
-  <title>Doppleit Animate</title>
-  <link rel="icon" href="./assets/doppleit_logo_placeholder.svg" type="image/svg+xml">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background: linear-gradient(135deg, #E6EFFF, #D6C4FF);
-      color: #1A1E2E;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-    body.dark {
-      background: linear-gradient(135deg, #1A1E2E, #2A2D4A);
-      color: #E0E0E0;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #logo {
-      max-width: 240px;
-      animation: glitch 1s infinite;
-    }
-    @keyframes glitch {
-      0% { filter: hue-rotate(0deg); }
-      25% { transform: translateX(-1px); }
-      50% { filter: hue-rotate(20deg); transform: translateX(1px); }
-      75% { transform: translateY(-1px); }
-      100% { filter: hue-rotate(0deg); transform: translate(0); }
-    }
-    #scene {
-      width: 100%;
-      max-width: 800px;
-      height: 500px;
-      margin: 0 auto 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    }
-    .controls, .state, .export, .timeline-slider, .objects {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    button, select, input[type="number"], input[type="range"] {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #A084CA, #6B728E);
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    body.dark button, body.dark select, body.dark input[type="number"], body.dark input[type="range"] {
-      background: linear-gradient(135deg, #8A6CB4, #5A6373);
-    }
-    button:hover, select:hover, input[type="range"]:hover {
-      transform: scale(1.05);
-      filter: brightness(1.15);
-    }
-    button.active {
-      background: linear-gradient(135deg, #8A6CB4, #5A6373);
-      transform: scale(1);
-    }
-    body.dark button.active {
-      background: linear-gradient(135deg, #7A5CA4, #4A5363);
-    }
-    input[type="range"] {
-      width: 300px;
-    }
-    .footer {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #888;
-      margin-top: 20px;
-      transition: color 0.3s ease;
-    }
-    body.dark .footer {
-      color: #aaa;
-    }
-    @media (max-width: 480px) {
-      #scene {
-        height: 300px;
-      }
-      .controls, .state, .export, .timeline-slider, .objects {
-        flex-direction: column;
-        align-items: center;
-      }
-      button, select, input[type="number"], input[type="range"] {
-        width: 100%;
-        max-width: 200px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Doppleit Animate Pro – A browser-based 3D animation tool." />
+    <meta name="keywords" content="animation, timeline, Doppleit, 3D, creative, web animation" />
+    <title>Doppleit Animate Pro</title>
+    <link rel="icon" href="./assets/doppleit_logo_placeholder.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r161/three.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #E6EFFF, #D6C4FF); color: #1A1E2E; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; gap: 16px; transition: background 0.3s ease, color 0.3s ease; }
+        body.dark { background: linear-gradient(135deg, #1A1E2E, #2A2D4A); color: #E0E0E0; }
+        .header { text-align: center; margin-bottom: 20px; }
+        #logo { max-width: 240px; animation: glitch 1s infinite; }
+        @keyframes glitch { 0% { filter: hue-rotate(0deg); } 25% { transform: translateX(-1px); } 50% { filter: hue-rotate(20deg); transform: translateX(1px); } 75% { transform: translateY(-1px); } 100% { filter: hue-rotate(0deg); transform: translate(0); } }
+        #scene-container { width: 100%; max-width: 800px; height: 500px; margin: 0 auto 20px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden; }
+        #scene { width: 100%; height: 100%; }
+        .controls, .state, .export, #timeline-container, .objects, .camera-controls, .animation-groups { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .animation-groups { flex-direction: column; align-items: center; }
+        .animation-groups h3 { margin-bottom: 10px; }
+        #groups-container { display: flex; flex-direction: column; gap: 8px; align-items: stretch; width: 80%; max-width: 400px; margin-bottom: 10px; }
+        .group { display: flex; gap: 8px; align-items: center; }
+        .group input[type="text"] { flex-grow: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+        .group button { padding: 8px 12px; border: none; border-radius: 6px; background-color: #555; color: #fff; cursor: pointer; transition: background-color 0.3s ease; }
+        .group button:hover { background-color: #777; }
+        #add-group-btn { padding: 10px 16px; border: none; border-radius: 8px; background: linear-gradient(135deg, #7C4DFF, #3F51B5); color: #fff; cursor: pointer; transition: background 0.3s ease; }
+        body.dark #add-group-btn { background: linear-gradient(135deg, #673AB7, #303F9F); }
+        #add-group-btn:hover { transform: scale(1.05); filter: brightness(1.15); }
+        button, select, input[type="number"], input[type="range"], input[type="color"], input[type="checkbox"] { padding: 8px 14px; border: none; border-radius: 8px; background: linear-gradient(135deg, #A084CA, #6B728E); color: #fff; cursor: pointer; transition: all 0.3s ease; }
+        body.dark button, body.dark select, body.dark input[type="number"], body.dark input[type="range"], body.dark input[type="color"], body.dark input[type="checkbox"] { background: linear-gradient(135deg, #8A6CB4, #5A6373); }
+        button:hover, select:hover, input[type="range"]:hover, input[type="color"]:hover { transform: scale(1.05); filter: brightness(1.15); }
+        button.active { background: linear-gradient(135deg, #8A6CB4, #5A6373); transform: scale(1); }
+        body.dark button.active { background: linear-gradient(135deg, #7A5CA4, #4A5363); }
+        input[type="range"] { width: 300px; }
+        input[type="color"] { padding: 2px; width: 50px; height: 34px; }
+        #timeline-container { position: relative; padding-bottom: 30px; }
+        #timeline { width: 100%; }
+        #keyframe-markers { position: absolute; top: 10px; left: 0; width: 100%; height: 10px; display: flex; align-items: center; pointer-events: none; }
+        .keyframe-marker { position: absolute; background-color: #FFD700; width: 10px; height: 10px; border-radius: 50%; cursor: pointer; transform: translateX(-50%); pointer-events: auto; transition: transform 0.2s ease; }
+        .keyframe-marker:hover, .keyframe-marker.dragging { transform: translateX(-50%) scale(1.2); background-color: #FF4500; }
+        .footer { text-align: center; font-size: 0.8rem; color: #888; margin-top: 20px; transition: color 0.3s ease; }
+        body.dark .footer { color: #aaa; }
+        .selected-object { outline: 2px solid #00FF00 !important; }
+        #timeline-controls { position: absolute; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 10px 10px 10px; background: rgba(255, 255, 255, 0.8); border-top: 1px solid #ccc; }
+        body.dark #timeline-controls { background: rgba(30, 30, 30, 0.8); border-top: 1px solid #555; }
+        #playback-marker { position: absolute; top: -10px; left: 0; height: 20px; width: 2px; background-color: #f00; pointer-events: none; transform: translateX(-1px); }
+        #timeline-zoom-container { display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 480px) { #scene-container { height: 300px; } .controls, .state, .export, #timeline-container, .objects, .camera-controls, .animation-groups { flex-direction: column; align-items: center; } button, select, input[type="number"], input[type="range"], input[type="color"], .group input[type="text"] { width: 100%; max-width: 200px; } input[type="color"] { width: 100%; max-width: 50px; } .group { flex-direction: column; align-items: stretch; } }
+    </style>
 </head>
 <body>
-  <div class="header">
-    <h1 style="position:absolute; clip:rect(1px, 1px, 1px, 1px); height:1px;">Doppleit Animate</h1>
-    <img id="logo" src="./assets/doppleit_logo_placeholder.svg" alt="Doppleit Animate Logo">
-  </div>
+    <div class="header">
+        <h1 style="position:absolute; clip:rect(1px, 1px, 1px, 1px); height:1px;">Doppleit Animate Pro</h1>
+        <img id="logo" src="./assets/doppleit_logo_placeholder.svg" alt="Doppleit Animate Pro Logo">
+    </div>
 
-  <div id="scene"></div>
+    <div id="scene-container">
+        <canvas id="scene"></canvas>
+    </div>
 
-  <div class="timeline-slider">
-    <input id="timeline" type="range" min="0" max="5" step="0.01" value="0">
-  </div>
+    <div id="timeline-container">
+        <input id="timeline" type="range" min="0" max="5" step="0.01" value="0" aria-label="Animation timeline slider" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+        <div id="keyframe-markers"></div>
+        <div id="timeline-controls">
+            <div id="timeline-zoom-container">
+                <label for="timeline-zoom">Zoom:</label>
+                <input id="timeline-zoom" type="range" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <label><input type="checkbox" id="timeline-snap"> Snap</label>
+            <div id="playback-marker"></div>
+        </div>
+    </div>
 
-  <div class="controls">
-    <button id="play" title="Play Animation">Play</button>
-    <button id="pause" title="Pause Animation">Pause</button>
-    <button id="stop" title="Stop Animation">Stop</button>
-    <label>FPS:<input id="fps" type="number" value="60" min="1" max="144" title="Frames Per Second"></label>
-    <label>Duration:<input id="duration" type="number" value="5" min="1" max="60" title="Animation Duration (seconds)"></label>
-    <button id="theme-toggle" title="Toggle Dark Mode">Dark Mode: Off</button>
-  </div>
+    <div class="controls">
+        <button id="play" title="Play Animation">Play</button>
+        <button id="pause" title="Pause Animation">Pause</button>
+        <button id="stop" title="Stop Animation">Stop</button>
+        <label>FPS:<input id="fps" type="number" value="60" min="1" max="144" title="Frames Per Second"></label>
+        <label>Duration:<input id="duration" type="number" value="5" min="1" max="60" title="Animation Duration (seconds)"></label>
+        <button id="theme-toggle" title="Toggle Dark Mode">Dark Mode: Off</button>
+    </div>
 
-  <div class="objects">
-    <button id="add-cube" title="Add Cube">Add Cube</button>
-    <button id="add-sphere" title="Add Sphere">Add Sphere</button>
-    <label>Move X:<input id="move-x" type="number" value="0" step="0.1"></label>
-    <label>Move Y:<input id="move-y" type="number" value="0" step="0.1"></label>
-    <label>Move Z:<input id="move-z" type="number" value="0" step="0.1"></label>
-  </div>
+    <div class="objects">
+        <button id="add-cube" title="Add Cube">Add Cube</button>
+        <button id="add-sphere" title="Add Sphere">Add Sphere</button>
+        <button id="add-plane" title="Add Plane">Add Plane</button>
+        <hr style="width:80%; margin: 16px auto; border: 1px solid #ccc;">
+        <label>Move X:<input id="move-x" type="number" value="0" step="0.1"></label>
+        <label>Move Y:<input id="move-y" type="number" value="0" step="0.1"></label>
+        <label>Move Z:<input id="move-z" type="number" value="0" step="0.1"></label>
+        <label>Rotate X:<input id="rotate-x" type="number" value="0" step="5"></label>
+        <label>Rotate Y:<input id="rotate-y" type="number" value="0" step="5"></label>
+        <label>Rotate Z:<input id="rotate-z" type="number" value="0" step="5"></label>
+        <label>Scale:<input id="scale" type="number" value="1" step="0.1" min="0.1"></label>
+        <label>Color:<input id="color" type="color" value="#A084CA"></label>
+        <select id="object-selector" title="Select Object">
+            <option value="" disabled selected>Select Object</option>
+        </select>
+    </div>
 
-  <div class="state">
-    <button id="set-keyframe" title="Set Keyframe">Set Keyframe</button>
-    <button id="save" title="Save State">Save</button>
-    <button id="load" title="Load State">Load</button>
-    <button id="undo" title="Undo Last Action">Undo</button>
-    <button id="redo" title="Redo Last Action">Redo</button>
-  </div>
+    <div class="camera-controls">
+        <label>Cam X:<input id="cam-x" type="number" value="0" step="0.1"></label>
+        <label>Cam Y:<input id="cam-y" type="number" value="0" step="0.1"></label>
+        <label>Cam Z:<input id="cam-z" type="number" value="5" step="0.1"></label>
+        <label>Cam Rot X:<input id="cam-rot-x" type="number" value="0" step="5"></label>
+        <label>Cam Rot Y:<input id="cam-rot-y" type="number" value="0" step="5"></label>
+        <label>Cam Rot Z:<input id="cam-rot-z" type="number" value="0" step="5"></label>
+    </div>
 
-  <div class="export">
-    <button id="export-json" title="Export as JSON">Export JSON</button>
-    <button id="export-embed" title="Export as HTML">Export Embed</button>
-  </div>
+    <div class="state">
+        <button id="set-keyframe" title="Set Keyframe">Set Keyframe</button>
+        <select id="easing" title="Easing Function">
+            <option value="linear">Linear</option>
+            <option value="easeInQuad">Ease In</option>
+            <option value="easeOutQuad">Ease Out</option>
+            <option value="easeInOutQuad">Ease In Out</option>
+        </select>
+        <button id="save" title="Save State">Save</button>
+        <button id="load" title="Load State">Load</button>
+        <button id="undo" title="Undo Last Action">Undo</button>
+        <button id="redo" title="Redo Last Action">Redo</button>
+    </div>
 
-  <div class="footer">Doppleit Animate v2.0</div>
+    <div class="export">
+        <button id="export-json" title="Export as JSON">Export JSON</button>
+        <button id="export-embed" title="Export as HTML">Export Embed</button>
+    </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Three.js Setup
-      const sceneContainer = document.getElementById('scene');
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, sceneContainer.clientWidth / 500, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(sceneContainer.clientWidth, 500);
-      sceneContainer.appendChild(renderer.domElement);
+    <div class="animation-groups">
+        <h3>Animation Layers</h3>
+        <div id="groups-container">
+            <div class="group">
+                <input type="text" value="Layer 1">
+                <button data-group-id="0" class="add-object-to-group">Add Object</button>
+                <button data-group-id="0" class="delete-group">Delete</button>
+            </div>
+            <button id="add-group-btn">Add New Layer</button>
+        </div>
+    </div>
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0x404040);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      directionalLight.position.set(1, 1, 1);
-      scene.add(ambientLight);
-      scene.add(directionalLight);
+    <div class="footer">Doppleit Animate Pro v2.1</div>
 
-      // Camera Position
-      camera.position.z = 5;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Part 2: Three.js Initialization and Scene Setup
+            const sceneContainer = document.getElementById('scene-container');
+            const sceneCanvas = document.getElementById('scene');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, sceneContainer.clientWidth / 500, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: sceneCanvas, antialias: true });
+            renderer.setSize(sceneContainer.clientWidth, 500);
 
-      // State
-      let time = 0;
-      let playing = false;
-      let fps = 60;
-      let duration = 5;
-      let lastRender = 0;
-      let isDarkMode = false;
-      let objects = [];
-      let keyframes = [];
-      let undoStack = [];
-      let redoStack = [];
-      let selectedObject = null;
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(ambientLight);
+            scene.add(directionalLight);
 
-      // DOM Elements
-      const playBtn = document.getElementById('play');
-      const pauseBtn = document.getElementById('pause');
-      const stopBtn = document.getElementById('stop');
-      const fpsInput = document.getElementById('fps');
-      const durationInput = document.getElementById('duration');
-      const timeline = document.getElementById('timeline');
-      const themeToggle = document.getElementById('theme-toggle');
-      const addCubeBtn = document.getElementById('add-cube');
-      const addSphereBtn = document.getElementById('add-sphere');
-      const moveXInput = document.getElementById('move-x');
-      const moveYInput = document.getElementById('move-y');
-      const moveZInput = document.getElementById('move-z');
-      const setKeyframeBtn = document.getElementById('set-keyframe');
-      const saveBtn = document.getElementById('save');
-      const loadBtn = document.getElementById('load');
-      const undoBtn = document.getElementById('undo');
-      const redoBtn = document.getElementById('redo');
-      const exportJsonBtn = document.getElementById('export-json');
-      const exportEmbedBtn = document.getElementById('export-embed');
+            camera.position.set(0, 0, 5);
 
-      // ARIA for Timeline Slider
-      timeline.setAttribute('aria-label', 'Animation timeline slider');
-      timeline.setAttribute('aria-valuemin', 0);
-      timeline.setAttribute('aria-valuemax', duration);
-      timeline.setAttribute('aria-valuenow', time);
+            // Part 3: State Variables and DOM Element References
+            let time = 0;
+            let playing = false;
+            let fps = 60;
+            let duration = 5;
+            let lastRender = 0;
+            let isDarkMode = false;
+            let objects = [];
+            let cameraKeyframes = [];
+            let undoStack = [];
+            let redoStack = [];
+            let selectedObject = null;
+            let animationGroups = [{ name: 'Layer 1', objects: [] }];
+            let nextGroupId = 1;
 
-      function showToast(msg) {
-        const t = document.createElement('div');
-        t.textContent = msg;
-        t.style = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 14px;background:#000;color:#fff;border-radius:8px;opacity:0.9;font-size:0.85rem;';
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2000);
-      }
+            const playBtn = document.getElementById('play');
+            const pauseBtn = document.getElementById('pause');
+            const stopBtn = document.getElementById('stop');
+            const fpsInput = document.getElementById('fps');
+            const durationInput = document.getElementById('duration');
+            const timeline = document.getElementById('timeline');
+            const keyframeMarkers = document.getElementById('keyframe-markers');
+            const themeToggle = document.getElementById('theme-toggle');
+            const
+addCubeBtn = document.getElementById('add-cube');
+            const addSphereBtn = document.getElementById('add-sphere');
+            const addPlaneBtn = document.getElementById('add-plane');
+            const moveXInput = document.getElementById('move-x');
+            const moveYInput = document.getElementById('move-y');
+            const moveZInput = document.getElementById('move-z');
+            const rotateXInput = document.getElementById('rotate-x');
+            const rotateYInput = document.getElementById('rotate-y');
+            const rotateZInput = document.getElementById('rotate-z');
+            const scaleInput = document.getElementById('scale');
+            const colorInput = document.getElementById('color');
+            const camXInput = document.getElementById('cam-x');
+            const camYInput = document.getElementById('cam-y');
+            const camZInput = document.getElementById('cam-z');
+            const camRotXInput = document.getElementById('cam-rot-x');
+            const camRotYInput = document.getElementById('cam-rot-y');
+            const camRotZInput = document.getElementById('cam-rot-z');
+            const setKeyframeBtn = document.getElementById('set-keyframe');
+            const easingSelect = document.getElementById('easing');
+            const saveBtn = document.getElementById('save');
+            const loadBtn = document.getElementById('load');
+            const undoBtn = document.getElementById('undo');
+            const redoBtn = document.getElementById('redo');
+            const exportJsonBtn = document.getElementById('export-json');
+            const exportEmbedBtn = document.getElementById('export-embed');
+            const objectSelector = document.getElementById('object-selector');
+            const groupsContainer = document.getElementById('groups-container');
+            const addGroupBtnElem = document.getElementById('add-group-btn');
+            const timelineZoomInput = document.getElementById('timeline-zoom');
+            const timelineSnapCheckbox = document.getElementById('timeline-snap');
+            const playbackMarker = document.getElementById('playback-marker');
+            const timelineContainer = document.getElementById('timeline-container');
 
-      function saveStateForUndo() {
-        undoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
-        if (undoStack.length > 50) undoStack.shift();
-        redoStack = [];
-      }
-
-      function addObject(type) {
-        const geometry = type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
-        const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(0, 0, 0);
-        scene.add(mesh);
-        objects.push({ mesh, type, keyframes: [] });
-        selectedObject = objects[objects.length - 1];
-        moveXInput.value = 0;
-        moveYInput.value = 0;
-        moveZInput.value = 0;
-        saveStateForUndo();
-      }
-
-      function interpolateKeyframes(obj, t) {
-        const objKeyframes = obj.keyframes;
-        if (objKeyframes.length < 2) return;
-        const sortedKeyframes = objKeyframes.sort((a, b) => a.time - b.time);
-        let startKf = sortedKeyframes[0];
-        let endKf = sortedKeyframes[sortedKeyframes.length - 1];
-        for (let i = 0; i < sortedKeyframes.length - 1; i++) {
-          if (t >= sortedKeyframes[i].time && t <= sortedKeyframes[i + 1].time) {
-            startKf = sortedKeyframes[i];
-            endKf = sortedKeyframes[i + 1];
-            break;
-          }
-        }
-        const fraction = (t - startKf.time) / (endKf.time - startKf.time);
-        obj.mesh.position.x = startKf.position.x + (endKf.position.x - startKf.position.x) * fraction;
-        obj.mesh.position.y = startKf.position.y + (endKf.position.y - startKf.position.y) * fraction;
-        obj.mesh.position.z = startKf.position.z + (endKf.position.z - startKf.position.z) * fraction;
-      }
-
-      function animate(timestamp) {
-        if (!playing) return;
-        if (timestamp - lastRender < 1000 / fps) {
-          requestAnimationFrame(animate);
-          return;
-        }
-        lastRender = timestamp;
-        time += 1 / fps;
-        if (time > duration) time = 0;
-        timeline.value = time;
-        timeline.setAttribute('aria-valuenow', time);
-        objects.forEach(obj => interpolateKeyframes(obj, time));
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }
-
-      function toggleDarkMode() {
-        isDarkMode = !isDarkMode;
-        document.body.classList.toggle('dark', isDarkMode);
-        themeToggle.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
-        themeToggle.classList.toggle('active', isDarkMode);
-      }
-
-      // Event Listeners
-      playBtn.onclick = () => {
-        playing = true;
-        lastRender = performance.now();
-        saveStateForUndo();
-        playBtn.classList.add('active');
-        pauseBtn.classList.remove('active');
-        requestAnimationFrame(animate);
-      };
-      pauseBtn.onclick = () => {
-        playing = false;
-        saveStateForUndo();
-        playBtn.classList.remove('active');
-        pauseBtn.classList.add('active');
-      };
-      stopBtn.onclick = () => {
-        time = 0;
-        playing = false;
-        saveStateForUndo();
-        playBtn.classList.remove('active');
-        pauseBtn.classList.remove('active');
-        timeline.value = 0;
-        objects.forEach(obj => interpolateKeyframes(obj, time));
-        renderer.render(scene, camera);
-      };
-      fpsInput.oninput = () => {
-        saveStateForUndo();
-        fps = parseInt(fpsInput.value);
-      };
-      durationInput.oninput = () => {
-        saveStateForUndo();
-        duration = parseFloat(durationInput.value);
-        timeline.max = duration;
-        timeline.setAttribute('aria-valuemax', duration);
-      };
-      timeline.oninput = () => {
-        time = parseFloat(timeline.value);
-        objects.forEach(obj => interpolateKeyframes(obj, time));
-        renderer.render(scene, camera);
-      };
-      themeToggle.onclick = toggleDarkMode;
-      addCubeBtn.onclick = () => addObject('cube');
-      addSphereBtn.onclick = () => addObject('sphere');
-      moveXInput.oninput = () => {
-        if (selectedObject) {
-          selectedObject.mesh.position.x = parseFloat(moveXInput.value);
-          renderer.render(scene, camera);
-        }
-      };
-      moveYInput.oninput = () => {
-        if (selectedObject) {
-          selectedObject.mesh.position.y = parseFloat(moveYInput.value);
-          renderer.render(scene, camera);
-        }
-      };
-      moveZInput.oninput = () => {
-        if (selectedObject) {
-          selectedObject.mesh.position.z = parseFloat(moveZInput.value);
-          renderer.render(scene, camera);
-        }
-      };
-      setKeyframeBtn.onclick = () => {
-        if (selectedObject) {
-          selectedObject.keyframes.push({
-            time: parseFloat(timeline.value),
-            position: {
-              x: selectedObject.mesh.position.x,
-              y: selectedObject.mesh.position.y,
-              z: selectedObject.mesh.position.z
+            // Part 4: Utility Functions
+            function showToast(msg) {
+                const toast = document.createElement('div');
+                toast.textContent = msg;
+                toast.style = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 14px;background:#000;color:#fff;border-radius:8px;opacity:0.9;font-size:0.85rem;z-index:1000;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
             }
-          });
-          saveStateForUndo();
-          showToast("Keyframe set!");
+
+            function saveStateForUndo() {
+                undoStack.push({
+                    time, fps, duration,
+                    objects: objects.map(obj => ({
+                        type: obj.type,
+                        position: obj.mesh.position.clone(),
+                        rotation: obj.mesh.rotation.clone(),
+                        scale: obj.mesh.scale.clone(),
+                        color: obj.mesh.material.color.getHex(),
+                        keyframes: obj.keyframes.map(kf => ({ ...kf })),
+                        groupId: obj.groupId
+                    })),
+                    cameraKeyframes: cameraKeyframes.map(kf => ({ ...kf })),
+                    animationGroups: animationGroups.map(group => ({
+                        name: group.name,
+                        objects: [...group.objects]
+                    })),
+                    nextGroupId
+                });
+                if (undoStack.length > 50) undoStack.shift();
+                redoStack = [];
+            }
+
+            function easingFunctions(type, t) {
+                switch (type) {
+                    case 'easeInQuad': return t * t;
+                    case 'easeOutQuad': return 1 - (1 - t) * (1 - t);
+                    case 'easeInOutQuad': return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    default: return t; // Linear
+                }
+            }
+
+            function updateTimelineMarkers() {
+                keyframeMarkers.innerHTML = '';
+                objects.forEach((obj, objIndex) => {
+                    obj.keyframes.forEach((kf, kfIndex) => {
+                        const marker = document.createElement('div');
+                        marker.classList.add('keyframe-marker');
+                        const position = (kf.time / duration) * 100;
+                        marker.style.left = `${position}%`;
+                        marker.title = `Keyframe at ${kf.time.toFixed(2)}s for ${obj.type} ${objIndex + 1}`;
+                        marker.dataset.objIndex = objIndex;
+                        marker.dataset.kfIndex = kfIndex;
+
+                        marker.addEventListener('mousedown', (e) => {
+                            marker.classList.add('dragging');
+                            const startX = e.clientX;
+                            const startTime = kf.time;
+                            const timelineRect = timeline.getBoundingClientRect();
+
+                            function onMouseMove(e) {
+                                const deltaX = e.clientX - startX;
+                                const timelineWidth = timelineRect.width;
+                                const zoomFactor = parseFloat(timelineZoomInput.value);
+                                const timeDelta = (deltaX / (timelineWidth * zoomFactor)) * duration;
+                                let newTime = Math.max(0, Math.min(duration, startTime + timeDelta));
+
+                                if (timelineSnapCheckbox.checked) {
+                                    newTime = Math.round(newTime / 0.1) * 0.1;
+                                    newTime = Math.max(0, Math.min(duration, newTime));
+                                }
+
+                                kf.time = newTime;
+                                marker.style.left = `${(newTime / duration) * 100}%`;
+                                saveStateForUndo();
+                            }
+
+                            function onMouseUp() {
+                                marker.classList.remove('dragging');
+                                document.removeEventListener('mousemove', onMouseMove);
+                                document.removeEventListener('mouseup', onMouseUp);
+                                obj.keyframes.sort((a, b) => a.time - b.time);
+                                updateTimelineMarkers();
+                            }
+
+                            document.addEventListener('mousemove', onMouseMove);
+                            document.addEventListener('mouseup', onMouseUp);
+                        });
+
+                        keyframeMarkers.appendChild(marker);
+                    });
+                });
+                cameraKeyframes.forEach((kf, kfIndex) => {
+                    const marker = document.createElement('div');
+                    marker.classList.add('keyframe-marker');
+                    marker.style.backgroundColor = '#00FF00';
+                    const position = (kf.time / duration) * 100;
+                    marker.style.left = `${position}%`;
+                    marker.title = `Camera Keyframe at ${kf.time.toFixed(2)}s`;
+                    marker.dataset.camKfIndex = kfIndex;
+
+                    marker.addEventListener('mousedown', (e) => {
+                        marker.classList.add('dragging');
+                        const startX = e.clientX;
+                        const startTime = kf.time;
+                        const timelineRect = timeline.getBoundingClientRect();
+
+                        function onMouseMove(e) {
+                            const deltaX = e.clientX - startX;
+                            const timelineWidth = timelineRect.width;
+                            const zoomFactor = parseFloat(timelineZoomInput.value);
+                            const timeDelta = (deltaX / (timelineWidth * zoomFactor)) * duration;
+                            let newTime = Math.max(0, Math.min(duration, startTime + timeDelta));
+
+                            if (timelineSnapCheckbox.checked) {
+                                newTime = Math.round(newTime / 0.1) * 0.1;
+                                newTime = Math.max(0, Math.min(duration, newTime));
+                            }
+
+                            kf.time = newTime;
+                            marker.style.left = `${(newTime / duration) * 100}%`;
+                            saveStateForUndo();
+                        }
+
+                        function onMouseUp() {
+                            marker.classList.remove('dragging');
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                            cameraKeyframes.sort((a, b) => a.time - b.time);
+                            updateTimelineMarkers();
+                        }
+
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+
+                    keyframeMarkers.appendChild(marker);
+                });
+            }
+
+            function addObject(type) {
+                let geometry;
+                switch (type) {
+                    case 'cube': geometry = new THREE.BoxGeometry(1, 1, 1); break;
+                    case 'sphere': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+                    case 'plane': geometry = new THREE.PlaneGeometry(2, 2); break;
+                    default: console.error('Unknown object type:', type); return;
+                }
+                const material = new THREE.MeshPhongMaterial({ color: parseInt(colorInput.value.replace('#', '0x')), side: THREE.DoubleSide });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(0, 0, 0);
+                scene.add(mesh);
+                const newObject = { mesh, type, keyframes: [], groupId: 0 }; // Default to the first group
+                objects.push(newObject);
+                selectObject(newObject);
+                updateObjectSelector();
+                updateTimelineMarkers();
+                updateGroupsUI();
+                saveStateForUndo();
+            }
+
+            function selectObject(object) {
+                if (selectedObject) {
+                    selectedObject.mesh.classList.remove('selected-object');
+                }
+                selectedObject = object;
+                if (selectedObject) {
+                    selectedObject.mesh.classList.add('selected-object');
+                    moveXInput.value = selectedObject.mesh.position.x.toFixed(2);
+                    moveYInput.value = selectedObject.mesh.position.y.toFixed(2);
+                    moveZInput.value = selectedObject.mesh.position.z.toFixed(2);
+                    rotateXInput.value = THREE.MathUtils.radToDeg(selectedObject.mesh.rotation.x).toFixed(0);
+                    rotateYInput.value = THREE.MathUtils.radToDeg(selectedObject.mesh.rotation.y).toFixed(0);
+                    rotateZInput.value = THREE.MathUtils.radToDeg(selectedObject.mesh.rotation.z).toFixed(0);
+                    scaleInput.value = selectedObject.mesh.scale.x.toFixed(2);
+                    colorInput.value = `#${selectedObject.mesh.material.color.getHexString()}`;
+
+                    // Update group selection in UI (if we add that later)
+                } else {
+                    moveXInput.value = moveYInput.value = moveZInput.value = 0;
+                    rotateXInput.value = rotateYInput.value = rotateZInput.value = 0;
+                    scaleInput.value = 1;
+                    colorInput.value = '#A084CA';
+                }
+            }
+
+            function updateObjectSelector() {
+                objectSelector.innerHTML = '<option value="" disabled selected>Select Object</option>';
+                objects.forEach((obj, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${obj.type} ${index + 1} (Layer: ${animationGroups.find(group => group.id === obj.groupId)?.name || 'Default'})`;
+                    objectSelector.appendChild(option);
+                    if (selectedObject === obj) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            function interpolateKeyframes(obj, t) {
+                const objKeyframes = obj.keyframes.sort((a, b) => a.time - b.time);
+                if (objKeyframes.length === 0) return;
+                if (objKeyframes.length === 1) {
+                    obj.mesh.position.copy(objKeyframes[0].position);
+                    obj.mesh.rotation.copy(objKeyframes[0].rotation);
+                    obj.mesh.scale.copy(objKeyframes[0].scale);
+                    obj.mesh.material.color.set(objKeyframes[0].color);
+                    return;
+                }
+
+                let startKf = objKeyframes[0];
+                let endKf = objKeyframes[objKeyframes.length - 1];
+
+                for (let i = 0; i < objKeyframes.length - 1; i++) {
+                    if (t >= objKeyframes[i].time && t <= objKeyframes[i + 1].time) {
+                        startKf = objKeyframes[i];
+                        endKf = objKeyframes[i + 1];
+                        break;
+                    }
+                }
+
+                const fraction = (t - startKf.time) / (endKf.time - startKf.time);
+                const easedFraction = easingFunctions(endKf.easing || 'linear', fraction);
+
+                obj.mesh.position.lerpVectors(startKf.position, endKf.position, easedFraction);
+                THREE.Quaternion.slerp(
+                    new THREE.Quaternion().setFromEuler(startKf.rotation),
+                    new THREE.Quaternion().setFromEuler(endKf.rotation),
+                    new THREE.Quaternion().setFromEuler(obj.mesh.rotation),
+                    easedFraction
+                );
+                obj.mesh.scale.lerpVectors(startKf.scale, endKf.scale, easedFraction);
+                obj.mesh.material.color.lerpColors(
+                    new THREE.Color(startKf.color),
+                    new THREE.Color(endKf.color),
+                    easedFraction
+                );
+            }
+
+            function interpolateCamera(t) {
+                const camKeyframes = cameraKeyframes.sort((a, b) => a.time - b.time);
+                if (camKeyframes.length === 0) return;
+                if (camKeyframes.length === 1) {
+                    camera.position.copy(camKeyframes[0].position);
+                    camera.rotation.copy(camKeyframes[0].rotation);
+                    return;
+                }
+
+                let startKf = camKeyframes[0];
+                let endKf = camKeyframes[camKeyframes.length - 1];
+
+                for (let i = 0; i < camKeyframes.length - 1; i++) {
+                    if (t >= camKeyframes[i].time && t <= camKeyframes[i + 1].time) {
+                        startKf = camKeyframes[i];
+                        endKf = camKeyframes[i + 1];
+                        break;
+                    }
+                }
+
+                const fraction = (t - startKf.time) / (endKf.time - startKf.time);
+                const easedFraction = easingFunctions(endKf.easing || 'linear', fraction);
+
+                camera.position.lerpVectors(startKf.position, endKf.position, easedFraction);
+                THREE.Quaternion.slerp(
+                    new THREE.Quaternion().setFromEuler(startKf.rotation),
+                    new THREE.Quaternion().setFromEuler(endKf.rotation),
+                    new THREE.Quaternion().setFromEuler(camera.rotation),
+                    easedFraction
+                );
+            }
+
+            function animate(timestamp) {
+                if (!playing) return;
+                if (timestamp - lastRender < 1000 / fps) {
+                    requestAnimationFrame(animate);
+                    return;
+                }
+                lastRender = timestamp;
+                time += 1 / fps;
+                if (time > duration) time = 0;
+                timeline.value = time;
+                timeline.setAttribute('aria-valuenow', time);
+                playbackMarker.style.left = `${(time / duration) * 100}%`;
+                objects.forEach(obj => interpolateKeyframes(obj, time));
+                interpolateCamera(time);
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+
+            function toggleDarkMode() {
+                isDarkMode = !isDarkMode;
+                document.body.classList.toggle('dark', isDarkMode);
+                themeToggle.textContent = `Dark Mode: ${isDarkMode ? 'On' : 'Off'}`;
+                themeToggle.classList.toggle('active', isDarkMode);
+            }
+
+            function updateTimelineScale() {
+                const zoom = parseFloat(timelineZoomInput.value);
+                timeline.style.transformOrigin = '0% 50%';
+                timeline.style.transform = `scaleX(${zoom})`;
+                keyframeMarkers.style.transformOrigin = '0% 50%';
+                keyframeMarkers.style.transform = `scaleX(${zoom})`;
+                playbackMarker.style.transformOrigin = '0% 50%';
+                playbackMarker.style.transform = `translateX(-1px) scaleX(${zoom})`;
+                timelineContainer.style.width = `${100 / zoom}%`;
+            }
+
+            function updateGroupsUI() {
+                groupsContainer.innerHTML = '';
+                animationGroups.forEach((group, index) => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.classList.add('group');
+                    groupDiv.innerHTML = `
+                        <input type="text" value="<span class="math-inline">\{group\.name\}"\>
+<button data\-group\-id\="</span>{group.id}" class="add-object-to-group">Add Object</button>
+                        <button data-group-id="${group.id}" class="delete-group">Delete</button>
+                    `;
+                    groupsContainer.appendChild(groupDiv);
+                });
+
+                // Re-add the "Add New Layer" button
+                const addGroupButton = document.createElement('button');
+                addGroup 
+Button.id = 'add-group-btn';
+                addGroupButton.textContent = 'Add New Layer';
+                groupsContainer.appendChild(addGroupButton);
+
+                addGroupButton.addEventListener('click', () => {
+                    const newGroupId = nextGroupId++;
+                    animationGroups.push({ id: newGroupId, name: `Layer ${newGroupId}`, objects: [] });
+                    updateGroupsUI();
+                    saveStateForUndo();
+                });
+
+                // Add event listeners for the new group buttons
+                groupsContainer.querySelectorAll('.delete-group').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const groupIdToDelete = parseInt(button.dataset.groupId);
+                        animationGroups = animationGroups.filter(group => group.id !== groupIdToDelete);
+                        objects.forEach(obj => {
+                            if (obj.groupId === groupIdToDelete) {
+                                obj.groupId = 0; // Reassign to default if needed
+                            }
+                        });
+                        updateObjectSelector();
+                        updateGroupsUI();
+                        updateTimelineMarkers();
+                        saveStateForUndo();
+                    });
+                });
+
+                groupsContainer.querySelectorAll('.add-object-to-group').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const groupIdToAdd = parseInt(button.dataset.groupId);
+                        if (selectedObject) {
+                            selectedObject.groupId = groupIdToAdd;
+                            updateObjectSelector();
+                            updateGroupsUI();
+                            saveStateForUndo();
+                            showToast(`Object added to Layer ${animationGroups.find(g => g.id === groupIdToAdd)?.name || 'Unknown'}`);
+                        } else {
+                            showToast('Please select an object first.');
+                        }
+                    });
+                });
+
+                groupsContainer.querySelectorAll('.group > input[type="text"]').forEach(input => {
+                    input.addEventListener('change', () => {
+                        const groupIdToUpdate = parseInt(input.parentNode.querySelector('.delete-group').dataset.groupId);
+                        const newName = input.value;
+                        const groupToUpdate = animationGroups.find(g => g.id === groupIdToUpdate);
+                        if (groupToUpdate) {
+                            groupToUpdate.name = newName;
+                            updateObjectSelector(); // Update object selector to reflect new group names
+                            saveStateForUndo();
+                        }
+                    });
+                });
+            }
+
+            // Part 5: Event Listeners
+            playBtn.onclick = () => {
+                playing = true;
+                lastRender = performance.now();
+                saveStateForUndo();
+                playBtn.classList.add('active');
+                pauseBtn.classList.remove('active');
+                requestAnimationFrame(animate);
+            };
+
+            pauseBtn.onclick = () => {
+                playing = false;
+                saveStateForUndo();
+                playBtn.classList.remove('active');
+                pauseBtn.classList.add('active');
+            };
+
+            stopBtn.onclick = () => {
+                time = 0;
+                playing = false;
+                saveStateForUndo();
+                playBtn.classList.remove('active');
+                pauseBtn.classList.remove('active');
+                timeline.value = 0;
+                playbackMarker.style.left = '0%';
+                objects.forEach(obj => interpolateKeyframes(obj, time));
+                interpolateCamera(time);
+                renderer.render(scene, camera);
+            };
+
+            fpsInput.oninput = () => {
+                saveStateForUndo();
+                fps = parseInt(fpsInput.value);
+            };
+
+            durationInput.oninput = () => {
+                saveStateForUndo();
+                duration = parseFloat(durationInput.value);
+                timeline.max = duration;
+                timeline.setAttribute('aria-valuemax', duration);
+                updateTimelineMarkers();
+            };
+
+            timeline.oninput = () => {
+                time = parseFloat(timeline.value);
+                playbackMarker.style.left = `${(time / parseFloat(timeline.max)) * 100}%`;
+                objects.forEach(obj => interpolateKeyframes(obj, time));
+                interpolateCamera(time);
+                renderer.render(scene, camera);
+            };
+
+            themeToggle.onclick = toggleDarkMode;
+            addCubeBtn.onclick = () => addObject('cube');
+            addSphereBtn.onclick = () => addObject('sphere');
+            addPlaneBtn.onclick = () => addObject('plane');
+
+            moveXInput.oninput = () => { if (selectedObject) { selectedObject.mesh.position.x = parseFloat(moveXInput.value); renderer.render(scene, camera); } };
+            moveYInput.oninput = () => { if (selectedObject) { selectedObject.mesh.position.y = parseFloat(moveYInput.value); renderer.render(scene, camera); } };
+            moveZInput.oninput = () => { if (selectedObject) { selectedObject.mesh.position.z = parseFloat(moveZInput.value); renderer.render(scene, camera); } };
+            rotateXInput.oninput = () => { if (selectedObject) { selectedObject.mesh.rotation.x = THREE.MathUtils.degToRad(parseFloat(rotateXInput.value)); renderer.render(scene, camera); } };
+            rotateYInput.oninput = () => { if (selectedObject) { selectedObject.mesh.rotation.y = THREE.MathUtils.degToRad(parseFloat(rotateYInput.value)); renderer.render(scene, camera); } };
+            rotateZInput.oninput = () => { if (selectedObject) { selectedObject.mesh.rotation.z = THREE.MathUtils.degToRad(parseFloat(rotateZInput.value)); renderer.render(scene, camera); } };
+            scaleInput.oninput = () => { if (selectedObject) { const s = parseFloat(scaleInput.value); selectedObject.mesh.scale.set(s, s, s); renderer.render(scene, camera); } };
+            colorInput.oninput = () => { if (selectedObject) { selectedObject.mesh.material.color.set(colorInput.value); renderer.render(scene, camera); } };
+
+            camXInput.oninput = () => { camera.position.x = parseFloat(camXInput.value); renderer.render(scene, camera); };
+            camYInput.oninput = () => { camera.position.y = parseFloat(camYInput.value); renderer.render(scene, camera); };
+            camZInput.oninput = () => { camera.position.z = parseFloat(camZInput.value); renderer.render(scene, camera); };
+            camRotXInput.oninput = () => { camera.rotation.x = THREE.MathUtils.degToRad(parseFloat(camRotXInput.value)); renderer.render(scene, camera); };
+            camRotYInput.oninput = () => { camera.rotation.y = THREE.MathUtils.degToRad(parseFloat(camRotYInput.value)); renderer.render(scene, camera); };
+            camRotZInput.oninput = () => { camera.rotation.z = THREE.MathUtils.degToRad(parseFloat(camRotZInput.value)); renderer.render(scene, camera); };
+
+            objectSelector.onchange = () => {
+                const index = parseInt(objectSelector.value);
+                if (!isNaN(index) && index >= 0 && index < objects.length) {
+                    selectObject(objects[index]);
+                } else {
+                    selectObject(null);
+                }
+            };
+
+            setKeyframeBtn.onclick = () => {
+                saveStateForUndo();
+                const easing = easingSelect.value;
+                if (selectedObject) {
+                    selectedObject.keyframes.push({
+                        time: parseFloat(timeline.value),
+                        position: selectedObject.mesh.position.clone(),
+                        rotation: selectedObject.mesh.rotation.clone(),
+                        scale: selectedObject.mesh.scale.clone(),
+                        color: selectedObject.mesh.material.color.getHex(),
+                        easing
+                    });
+                    selectedObject.keyframes.sort((a, b) => a.time - b.time);
+                    showToast("Object keyframe set!");
+                }
+                cameraKeyframes.push({
+                    time: parseFloat(timeline.value),
+                    position: camera.position.clone(),
+                    rotation: camera.rotation.clone(),
+                    easing
+                });
+                cameraKeyframes.sort((a, b) => a.time - b.time);
+                updateTimelineMarkers();
+                showToast("Camera keyframe set!");
+            };
+
+            saveBtn.onclick = () => {
+                const state = {
+                    time, fps, duration,
+                    objects: objects.map(obj => ({
+                        type: obj.type,
+                        position: obj.mesh.position.toArray(),
+                        rotation: obj.mesh.rotation.toArray(),
+                        scale: obj.mesh.scale.toArray(),
+                        color: obj.mesh.material.color.getHex(),
+                        keyframes: obj.keyframes.map(kf => ({ ...kf })),
+                        groupId: obj.groupId
+                    })),
+                    cameraKeyframes: cameraKeyframes.map(kf => ({
+                        time: kf.time,
+                        position: kf.position.toArray(),
+                        rotation: kf.rotation.toArray(),
+                        easing: kf.easing
+                    })),
+                    animationGroups: animationGroups.map(group => ({
+                        id: group.id,
+                        name: group.name,
+                        objects: [...group.objects]
+                    })),
+                    nextGroupId
+                };
+                localStorage.setItem('doppleitAnimateProState', JSON.stringify(state));
+                showToast('State saved!');
+            };
+
+            loadBtn.onclick = () => {
+                const savedState = localStorage.getItem('doppleitAnimateProState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    time = state.time;
+                    fps = state.fps;
+                    duration = state.duration;
+                    fpsInput.value = fps;
+                    durationInput.value = duration;
+                    timeline.max = duration;
+                    timeline.value = time;
+                    timeline.setAttribute('aria-valuenow', time);
+                    nextGroupId = state.nextGroupId || 1;
+                    animationGroups = state.animationGroups ? state.animationGroups.map(group => ({
+                        id: group.id,
+                        name: group.name,
+                        objects: group.objects || []
+                    })) : [{ id: 0, name: 'Layer 1', objects: [] }];
+
+                    objects.forEach(obj => scene.remove(obj.mesh));
+                    objects = state.objects.map(objData => {
+                        let geometry;
+                        switch (objData.type) {
+                            case 'cube': geometry = new THREE.BoxGeometry(1, 1, 1); break;
+                            case 'sphere': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+                            case 'plane': geometry = new THREE.PlaneGeometry(2, 2); break;
+                            default: console.error('Unknown object type:', objData.type); return null;
+                        }
+                        const material = new THREE.MeshPhongMaterial({ color: objData.color, side: THREE.DoubleSide });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.fromArray(objData.position);
+                        mesh.rotation.fromArray(objData.rotation);
+                        mesh.scale.fromArray(objData.scale);
+                        return {
+                            mesh,
+                            type: objData.type,
+                            keyframes: objData.keyframes.map(kf => ({ ...kf })),
+                            groupId: objData.groupId || 0
+                        };
+                    }).filter(Boolean);
+                    updateObjectSelector();
+                    updateGroupsUI();
+                    if (objects.length > 0) selectObject(objects[0]);
+
+                    cameraKeyframes = state.cameraKeyframes ? state.cameraKeyframes.map(kf => ({
+                        time: kf.time,
+                        position: new THREE.Vector3().fromArray(kf.position),
+                        rotation: new THREE.Euler().fromArray(kf.rotation),
+                        easing: kf.easing
+                    })) : [];
+
+                    updateTimelineMarkers();
+                    renderer.render(scene, camera);
+                    showToast('State loaded!');
+                    saveStateForUndo();
+                } else {
+                    showToast('No saved state found.');
+                }
+            };
+
+            undoBtn.onclick = () => {
+                if (undoStack.length > 0) {
+                    saveStateForRedo();
+                    const prevState = undoStack.pop();
+                    loadStateFromObject(prevState);
+                    showToast('Undo done!');
+                } else {
+                    showToast('Nothing to undo.');
+                }
+            };
+
+            redoBtn.onclick = () => {
+                if (redoStack.length > 0) {
+                    saveStateForUndo();
+                    const nextState = redoStack.pop();
+                    loadStateFromObject(nextState);
+                    showToast('Redo done!');
+                } else {
+                    showToast('Nothing to redo.');
+                }
+            };
+
+            function saveStateForRedo() {
+                redoStack.push({
+                    time, fps, duration,
+                    objects: objects.map(obj => ({
+                        type: obj.type,
+                        position: obj.mesh.position.clone(),
+                        rotation: obj.mesh.rotation.clone(),
+                        scale: obj.mesh.scale.clone(),
+                        color: obj.mesh.material.color.getHex(),
+                        keyframes: obj.keyframes.map(kf => ({ ...kf })),
+                        groupId: obj.groupId
+                    })),
+                    cameraKeyframes: cameraKeyframes.map(kf => ({ ...kf })),
+                    animationGroups: animationGroups.map(group => ({
+                        id: group.id,
+                        name: group.name,
+                        objects: [...group.objects]
+                    })),
+                    nextGroupId
+                });
+                if (redoStack.length > 50) redoStack.shift();
+            }
+
+            function loadStateFromObject(state) {
+                time = state.time;
+                fps = state.fps;
+                duration = state.duration;
+                fpsInput.value = fps;
+                durationInput.value = duration;
+                timeline.max = duration;
+                timeline.value = time;
+                timeline.setAttribute('aria-valuenow', time);
+                nextGroupId = state.nextGroupId || 1;
+                animationGroups = state.animationGroups ? state.animationGroups.map(group => ({
+                    id: group.id,
+                    name: group.name,
+                    objects: group.objects || []
+                })) : [{ id: 0, name: 'Layer 1', objects: [] }];
+
+                objects.forEach(obj => scene.remove(obj.mesh));
+                objects = state.objects.map(objData => {
+                    let geometry;
+                    switch (objData.type) {
+                        case 'cube': geometry = new THREE.BoxGeometry(1, 1, 1); break;
+                        case 'sphere': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+                        case 'plane': geometry = new THREE.PlaneGeometry(2, 2); break;
+                        default: console.error('Unknown object type:', objData.type); return null;
+                    }
+                    const material = new THREE.MeshPhongMaterial({ color: objData.color, side: THREE.DoubleSide });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.copy(objData.position);
+                    mesh.rotation.copy(objData.rotation);
+                    mesh.scale.copy(objData.scale);
+                    return {
+                        mesh,
+                        type: objData.type,
+                        keyframes: objData.keyframes.map(kf => ({ ...kf })),
+                        groupId: objData.groupId || 0
+                    };
+                }).filter(Boolean);
+                updateObjectSelector();
+                updateGroupsUI();
+                if (objects.length > 0) selectObject(objects[0]);
+
+                cameraKeyframes = state.cameraKeyframes ? state.cameraKeyframes.map(kf => ({ ...kf })) : [];
+                updateTimelineMarkers();
+                renderer.render(scene, camera);
+            }
+
+            exportJsonBtn.onclick = () => {
+                const exportData = {
+                    duration,
+                    fps,
+                    objects: objects.map(obj => ({
+                        type: obj.type,
+                        keyframes: obj.keyframes.map(kf => ({
+                            time: kf.time,
+                            position: kf.position.toArray(),
+                            rotation: kf.rotation.toArray(),
+                            scale: kf.scale.toArray(),
+                            color: kf.color,
+                            easing: kf.easing
+                        })),
+                        groupId: obj.groupId
+                    })),
+                    cameraKeyframes: cameraKeyframes.map(kf => ({
+                        time: kf.time,
+                        position: kf.position.toArray(),
+                        rotation: kf.rotation.toArray(),
+                        easing: kf.easing
+                    })),
+                    animationGroups: animationGroups.map(group => ({
+                        id: group.id,
+                        name: group.name,
+                        objects: [...group.objects]
+                    }))
+                };
+                const jsonString = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'animation.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast('JSON exported!');
+            };
+exportEmbedBtn.onclick = () => {
+                const embedCode = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedded Animation</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="embedded-scene"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r161/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('embedded-scene'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(ambientLight);
+        scene.add(directionalLight);
+        camera.position.z = 5;
+
+        const animationData = ${JSON.stringify({
+                    duration,
+                    fps,
+                    objects: objects.map(obj => ({
+                        type: obj.type,
+                        keyframes: obj.keyframes.map(kf => ({
+                            time: kf.time,
+                            position: kf.position.toArray(),
+                            rotation: kf.rotation.toArray(),
+                            scale: kf.scale.toArray(),
+                            color: kf.color,
+                            easing: kf.easing
+                        })),
+                        groupId: obj.groupId
+                    })),
+                    cameraKeyframes: cameraKeyframes.map(kf => ({
+                        time: kf.time,
+                        position: kf.position.toArray(),
+                        rotation: kf.rotation.toArray(),
+                        easing: kf.easing
+                    }))
+                })};
+
+        const animationStartTime = performance.now();
+
+        function easingFunctions(type, t) {
+            switch (type) {
+                case 'easeInQuad': return t * t;
+                case 'easeOutQuad': return 1 - (1 - t) * (1 - t);
+                case 'easeInOutQuad': return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                default: return t; // Linear
+            }
         }
-      };
-      saveBtn.onclick = () => {
-        const state = { time, fps, duration, objects, keyframes };
-        localStorage.setItem('doppleit-animate-state', JSON.stringify(state));
-        showToast("Saved!");
-      };
-      loadBtn.onclick = () => {
-        try {
-          const state = JSON.parse(localStorage.getItem('doppleit-animate-state'));
-          if (state) {
-            time = state.time || 0;
-            fps = state.fps || 60;
-            duration = state.duration || 5;
-            fpsInput.value = fps;
-            durationInput.value = duration;
-            timeline.max = duration;
-            timeline.setAttribute('aria-valuemax', duration);
-            timeline.value = time;
-            // Clear existing objects
-            objects.forEach(obj => scene.remove(obj.mesh));
-            objects = [];
-            state.objects.forEach(objData => {
-              const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
-              const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
-              const mesh = new THREE.Mesh(geometry, material);
-              mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
-              scene.add(mesh);
-              objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
+
+        const animatedObjects = animationData.objects.map(objData => {
+            let geometry;
+            switch (objData.type) {
+                case 'cube': geometry = new THREE.BoxGeometry(1, 1, 1); break;
+                case 'sphere': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+                case 'plane': geometry = new THREE.PlaneGeometry(2, 2); break;
+                default: console.error('Unknown object type:', objData.type); return null;
+            }
+            const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide });
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+            return { mesh, keyframes: objData.keyframes };
+        }).filter(Boolean);
+
+        function interpolate(obj, time) {
+            if (!obj || obj.keyframes.length === 0) return;
+            const keyframes = obj.keyframes.sort((a, b) => a.time - b.time);
+            if (keyframes.length === 1) {
+                obj.mesh.position.fromArray(keyframes[0].position);
+                obj.mesh.rotation.fromArray(keyframes[0].rotation);
+                obj.mesh.scale.fromArray(keyframes[0].scale);
+                obj.mesh.material.color.setHex(keyframes[0].color);
+                return;
+            }
+
+            let startKf = keyframes[0];
+            let endKf = keyframes[keyframes.length - 1];
+
+            for (let i = 0; i < keyframes.length - 1; i++) {
+                if (time >= keyframes[i].time && time <= keyframes[i + 1].time) {
+                    startKf = keyframes[i];
+                    endKf = keyframes[i + 1];
+                    break;
+                }
+            }
+
+            const fraction = (time - startKf.time) / (endKf.time - startKf.time);
+            const easedFraction = easingFunctions(endKf.easing || 'linear', fraction);
+
+            obj.mesh.position.lerpVectors(new THREE.Vector3().fromArray(startKf.position), new THREE.Vector3().fromArray(endKf.position), easedFraction);
+            THREE.Quaternion.slerp(
+                new THREE.Quaternion().setFromEuler(new THREE.Euler().fromArray(startKf.rotation)),
+                new THREE.Quaternion().setFromEuler(new THREE.Euler().fromArray(endKf.rotation)),
+                new THREE.Quaternion().setFromEuler(obj.mesh.rotation),
+                easedFraction
+            );
+            obj.mesh.scale.lerpVectors(new THREE.Vector3().fromArray(startKf.scale), new THREE.Vector3().fromArray(endKf.scale), easedFraction);
+            animatedObjects.forEach((animatedObj, index) => {
+                const originalObjectData = animationData.objects[index];
+                if (originalObjectData && originalObjectData.keyframes.length > 0) {
+                    const firstKeyframeColor = originalObjectData.keyframes[0].color;
+                    animatedObj.mesh.material.color.setHex(firstKeyframeColor);
+                }
             });
-            keyframes = state.keyframes || [];
-            selectedObject = objects.length ? objects[objects.length - 1] : null;
-            if (selectedObject) {
-              moveXInput.value = selectedObject.mesh.position.x;
-              moveYInput.value = selectedObject.mesh.position.y;
-              moveZInput.value = selectedObject.mesh.position.z;
-            }
-            renderer.render(scene, camera);
-            showToast("Loaded!");
-          }
-        } catch (e) {
-          showToast("Failed to load state.");
         }
-      };
-      undoBtn.onclick = () => {
-        if (!undoStack.length) return;
-        redoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
-        const prev = undoStack.pop();
-        time = prev.time;
-        fps = prev.fps;
-        duration = prev.duration;
-        fpsInput.value = fps;
-        durationInput.value = duration;
-        timeline.max = duration;
-        timeline.value = time;
-        objects.forEach(obj => scene.remove(obj.mesh));
-        objects = [];
-        prev.objects.forEach(objData => {
-          const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
-          const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
-          scene.add(mesh);
-          objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
-        });
-        keyframes = prev.keyframes;
-        selectedObject = objects.length ? objects[objects.length - 1] : null;
-        renderer.render(scene, camera);
-      };
-      redoBtn.onclick = () => {
-        if (!redoStack.length) return;
-        undoStack.push({ time, fps, duration, objects: objects.map(obj => ({ ...obj })), keyframes: keyframes.map(kf => ({ ...kf })) });
-        const next = redoStack.pop();
-        time = next.time;
-        fps = next.fps;
-        duration = next.duration;
-        fpsInput.value = fps;
-        durationInput.value = duration;
-        timeline.max = duration;
-        timeline.value = time;
-        objects.forEach(obj => scene.remove(obj.mesh));
-        objects = [];
-        next.objects.forEach(objData => {
-          const geometry = objData.type === 'cube' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.5, 32, 32);
-          const material = new THREE.MeshPhongMaterial({ color: 0xA084CA });
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.set(objData.mesh.position.x, objData.mesh.position.y, objData.mesh.position.z);
-          scene.add(mesh);
-          objects.push({ mesh, type: objData.type, keyframes: objData.keyframes || [] });
-        });
-        keyframes = next.keyframes;
-        selectedObject = objects.length ? objects[objects.length - 1] : null;
-        renderer.render(scene, camera);
-      };
-      exportJsonBtn.onclick = () => {
-        const data = { time, fps, duration, objects, keyframes };
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'doppleit-animate.json';
-        a.click();
-        URL.revokeObjectURL(url);
-      };
-      exportEmbedBtn.onclick = () => {
-        showToast("Export embed coming soon!");
-      };
 
-      // Initial Render
-      renderer.render(scene, camera);
+        const cameraKeyframes = animationData.cameraKeyframes.sort((a, b) => a.time - b.time);
+        function interpolateCamera(time) {
+            if (cameraKeyframes.length === 0) return;
+            if (cameraKeyframes.length === 1) {
+                camera.position.fromArray(cameraKeyframes[0].position);
+                camera.rotation.fromArray(cameraKeyframes[0].rotation);
+                return;
+            }
 
-      // Resize Handler
-      window.addEventListener('resize', () => {
-        const width = sceneContainer.clientWidth;
-        const height = window.innerWidth <= 480 ? 300 : 500;
-        renderer.setSize(width, height);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.render(scene, camera);
-      });
-    });
-  </script>
+            let startKf = cameraKeyframes[0];
+            let endKf = cameraKeyframes[cameraKeyframes.length - 1];
+
+            for (let i = 0; i < cameraKeyframes.length - 1; i++) {
+                if (time >= cameraKeyframes[i].time && time <= cameraKeyframes[i + 1].time) {
+                    startKf = cameraKeyframes[i];
+                    endKf = cameraKeyframes[i + 1];
+                    break;
+                }
+            }
+
+            const fraction = (time - startKf.time) / (endKf.time - startKf.time);
+            const easedFraction = easingFunctions(endKf.easing || 'linear', fraction);
+
+            camera.position.lerpVectors(new THREE.Vector3().fromArray(startKf.position), new THREE.Vector3().fromArray(endKf.position), easedFraction);
+            THREE.Quaternion.slerp(
+                new THREE.Quaternion().setFromEuler(new THREE.Euler().fromArray(startKf.rotation)),
+                new THREE.Quaternion().setFromEuler(new THREE.Euler().fromArray(endKf.rotation)),
+                new THREE.Quaternion().setFromEuler(camera.rotation),
+                easedFraction
+            );
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const currentTime = (performance.now() - animationStartTime) / 1000;
+            const loopTime = currentTime % animationData.duration;
+            animatedObjects.forEach(obj => interpolate(obj, loopTime));
+            interpolateCamera(loopTime);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
+`;
+                const blob = new Blob([embedCode], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'embedded_animation.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast('HTML embed code exported!');
+            };
+
+            updateTimelineScale();
+            updateGroupsUI();
+            renderer.render(scene, camera);
+        });
+    </script>
 </body>
 </html>
