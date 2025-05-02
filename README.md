@@ -1,114 +1,95 @@
-# Doppleit Animate Pro v2.2
+# 🎞️ Doppleit Animate v1 – Preview Edition  
+**Software that reflects your creativity.**
 
-Doppleit Animate Pro is a browser-based 3D animation editor built with Three.js.  
-It features keyframe animation, layer grouping, timeline controls, color and camera animation, and full HTML/JSON export.
-
----
-
-## 🚀 Live Features
-
-### ✅ Animation System
-- Position, Rotation, Scale, and Color keyframes
-- Easing functions (linear, ease-in/out)
-- Camera keyframe animation
-- Timeline playback marker and scrubber
-- Drag-and-drop timeline keyframes
-- Zoomable timeline and snap mode
-- Layer-based animation group system
-
-### ✅ Scene Editing
-- Add Cube, Sphere, Plane objects
-- Transform inputs: position, rotation, scale
-- Color picker per object
-- Object selection and layer assignment
-
-### ✅ UI/UX
-- Doppleit glitch branding
-- Responsive design for mobile
-- Light/dark mode toggle
-- Visual playback marker
-- Undo/Redo with deep scene state
-
-### ✅ Export / Save
-- Save/load scene to/from localStorage
-- Export JSON (for future loading)
-- Export full embedded HTML animation
-- All data: camera, easing, groups, keyframes included
+![Doppleit Logo](https://doppleitvector.netlify.app/Assets/doppleit-logo.svg)
 
 ---
 
-## 📖 How to Use
+## ✨ What is Doppleit Animate?
 
-### 🧱 Adding Objects
-- Use "Add Cube", "Add Sphere", or "Add Plane" to insert new objects
-- Objects default to Layer 1 (can be reassigned)
+**Doppleit Animate** is a professional-grade animation suite that runs entirely in your browser.  
+From 2D keyframes to 3D object manipulation, you can storyboard, animate, and export—all without installs.
 
-### 🎨 Editing Objects
-- Select from dropdown list or by adding new object
-- Use inputs to move, rotate, scale, or recolor
-- Values update live in the scene
-
-### 🎬 Creating Animation
-1. Move the timeline slider to your desired time
-2. Edit object position/rotation/scale/color
-3. Click **Set Keyframe**
-4. Select easing function if desired
-
-### 🎥 Camera Animation
-- Camera position & rotation are keyframed automatically
-- Will interpolate with easing during playback
-
-### 🧭 Timeline Tools
-- Use playback controls to preview
-- Drag keyframe markers to reposition in time
-- Toggle **Snap** for frame alignment
-- Use **Zoom** to see more or less of the timeline
-
-### 📁 Layers / Groups
-- Rename layers
-- Add/Delete groups
-- Assign objects to groups
-- Group info included in export
-
-### 💾 Saving & Loading
-- Click **Save** to store to browser
-- Click **Load** to restore previous scene
-- Uses `localStorage`, so persists across sessions (in same browser)
-
-### 📤 Exporting
-- **Export JSON**: full scene and timeline data
-- **Export Embed**: generates standalone `.html` animation (playback only)
+Built for creators, designers, and motion artists who want power without friction.
 
 ---
 
-## 🔧 Project Details
+## 🚀 Features (Preview Version)
 
-- Framework: None (Vanilla JS)
-- Engine: [Three.js r161](https://threejs.org/)
-- File: Single HTML file (self-contained)
-- License: MIT
-
----
-
-## 📦 Deployment
-
-You can deploy the `.html` file to:
-- GitHub Pages
-- Netlify / Vercel
-- Or open it locally in any browser
+- ✅ **2D/3D Keyframe Animation**
+- 🎞️ **Timeline Editor with Frame Navigation**
+- 🧠 **Real-Time Preview & Playback Controls**
+- 🖼️ **Import / Export Scenes (JSON, PNG, SVG)**
+- ✍️ **On-Canvas Drawing & Path Animation**
+- 💾 **Save / Load Project State**
+- ⌨️ **Keyboard Shortcuts for Power Users**
+- 🌙 **Dark Mode + Doppleit UI Styling**
+- ♿ **Accessible and Mobile-Ready**
 
 ---
 
-## 🧪 Coming Soon Ideas
+## ⚙️ How to Use
 
-- Draggable timeline keyframe editor
-- Audio and event triggers
-- Per-layer playback toggle
-- More easing options and custom curves
-- Image/text layer support
+1. **Launch the App:**  
+   Go to [doppleitvector.netlify.app/animate](https://doppleitvector.netlify.app/animate)
+
+2. **Draw or Import Assets:**  
+   Use vector tools or upload graphics for animation.
+
+3. **Animate with Timeline:**  
+   Add keyframes, drag to move, and play in real-time.
+
+4. **Save or Export:**  
+   - **Save** to local project file (JSON)  
+   - **Export** to PNG, SVG, or vector animation JSON
 
 ---
 
-## 🙌 Created by Carl (Doppleit Labs)
+## 🧠 Why It Matters
 
-> Software that reflects your creativity.
+Most animation tools are slow, expensive, or locked behind paywalls.  
+**Doppleit Animate** changes that.
+
+It’s:
+- 🔥 Fast
+- 🧩 Modular
+- ✨ Free (for now)
+
+No installs. No gatekeeping. Just expression.
+
+---
+
+## 🚨 What’s Next?
+
+The **Pro version** is almost here.
+
+Coming soon:
+> 🎚️ Advanced curve controls  
+> 🔄 Motion tweening + easing presets  
+> 🎛️ Keyframe inspector  
+> 🧱 Timeline layers & audio tracks  
+> 🌐 Cloud sync + versioning  
+> 🧩 Plugin system for FX and camera
+
+This is just the beginning.
+
+---
+
+## 📬 Feedback & Access
+
+Found a bug? Got a feature idea?
+
+Email us: [team@doppleit.com](mailto:team@doppleit.com)
+
+---
+
+## 🪪 License
+
+Preview version is free for non-commercial use.  
+Pro version will require a license key.
+
+---
+
+**Doppleit Animate**  
+*Where your motion meets meaning.*  
+[www.doppleit.com](https://doppleitvector.netlify.app/animate)
