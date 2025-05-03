@@ -1,415 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Doppleit Animate Lite v2.2</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
-    <link rel="manifest" href="/manifest.webmanifest">
-    <style>
-        :root {
-            --primary: #A084CA;
-            --bg: #E6EFFF;
-            --timeline: #2A2D4A;
-            --text: #333;
-        }
-        [data-theme="dark"] {
-            --primary: #7A5EAC;
-            --bg: #2A2D4A;
-            --timeline: #1A1C2A;
-            --text: #EEE;
-        }
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: var(--bg);
-            color: var(--text);
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            height: 100vh;
-        }
-        canvas { 
-            border: 2px solid var(--primary); 
-            margin: 10px auto;
-        }
-        .controls { 
-            padding: 10px; 
-            background: var(--bg);
-            gap: 5px; 
-            display: flex; 
-            flex-wrap: wrap;
-        }
-        button { 
-            padding: 6px 12px; 
-            background: var(--primary); 
-            border: none; 
-            color: white; 
-            cursor: pointer;
-        }
-        #timeline { 
-            height: 150px; 
-            background: var(--timeline); 
-            overflow-x: auto; 
-            position: relative; 
-        }
-        .frame-thumb { 
-            width: 100px; 
-            min-width: 80px;
-            flex: 0 0 auto;
-            height: 100%; 
-            border: 2px solid transparent; 
-            position: relative; 
-        }
-        .active-frame { border-color: yellow !important; }
-        .tool-active { background: #6F4CAC !important; }
-        .sidebar { 
-            position: fixed; 
-            right: 0; 
-            top: 0; 
-            background: var(--bg); 
-            padding: 10px; 
-            width: 200px; 
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-            height: 100vh;
-        }
-        .frame-counter {
-            position: absolute;
-            right: 10px;
-            top: 5px;
-            color: yellow;
-            font-size: 0.9em;
-        }
-        @media (max-width: 768px) {
-            canvas {
-                width: 95% !important;
-                height: 50vh !important;
-            }
-            .sidebar {
-                width: 150px;
-                padding: 5px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Doppleit Animate Lite v2.4</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>" />
+  <style>
+    :root {
+      --primary: #A084CA;
+      --bg: #E6EFFF;
+      --timeline: #2A2D4A;
+      --text: #333;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    canvas {
+      display: block;
+      margin: 10px auto;
+      border: 2px solid var(--primary);
+      max-width: 95%;
+      height: auto!important;
+      aspect-ratio: 3/2;
+      touch-action: none;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 10px;
+      gap: 10px;
+      background: var(--bg);
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+      z-index: 10;
+    }
+    .control-group {
+      padding: 10px;
+      font-size: 0.9em;
+    }
+    #timeline {
+      display: flex;
+      gap: 5px;
+      padding: 10px;
+      background: var(--timeline);
+      overflow-x: auto;
+    }
+    .frame-thumb {
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .active-frame {
+      border-color: var(--primary);
+    }
+    .timeline-label {
+      padding: 10px 0 0 15px;
+      margin: 0;
+      font-weight: bold;
+      color: var(--text);
+    }
+    #sizeToggle {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+    }
+    @media (max-width: 768px) {
+      canvas { width: 95% !important; }
+    }
+  </style>
 </head>
 <body>
-    <div class="controls">
-        <button id="theme" title="Toggle theme">🌓</button>
-        <button id="reset" title="Reset all">🔄</button>
-        <button id="play">▶</button>
-        <button id="prev">⏮</button>
-        <button id="next">⏭</button>
-        <button id="addFrame">+ Frame</button>
-        <button id="deleteFrame">- Frame</button>
-        <button id="exportGif">Export GIF</button>
+  <div class="controls">
+    <button onclick="exportGif()" id="export">Export GIF</button>
+    <button onclick="addFrame()">➕ Frame</button>
+    <button onclick="undo()">↩ Undo</button>
+    <button onclick="redo()">↪ Redo</button>
+    <div class="control-group">
+      <label>Brush Size: </label>
+      <input type="range" id="brushSize" min="1" max="50" value="3">
     </div>
-    
-    <canvas id="mainCanvas"></canvas>
-    
-    <div id="timeline">
-        <div class="frame-counter" id="frameCount">Frame 1/1</div>
-        <div id="frames" style="display: flex; gap: 2px;"></div>
-        <div id="playhead" style="width: 2px; background: yellow; height: 100%; position: absolute; left: 0;"></div>
+    <div class="control-group">
+      <label>Color: </label>
+      <input type="color" id="color" value="#A084CA">
     </div>
+  </div>
 
-    <div class="sidebar">
-        <h3>Tools</h3>
-        <button id="select" class="tool-active">✥ Select</button>
-        <button id="draw">✎ Draw</button>
-        <button id="shape">⬢ Shape</button>
-        <input type="color" id="color">
-        
-        <h3>Properties</h3>
-        <label><input type="checkbox" id="fill"> Fill</label>
-        <label>X: <input type="number" id="posX" disabled title="Edit mode coming soon"></label>
-        <label>Y: <input type="number" id="posY" disabled title="Edit mode coming soon"></label>
-        <label>Size: <input type="range" id="size" min="1" max="50" value="5"></label>
-    </div>
+  <button id="sizeToggle" onclick="toggleCanvasSize()">Fit to Screen</button>
+  
+  <canvas id="mainCanvas"></canvas>
+  
+  <div class="control-group">
+    <label for="frameDuration">Frame Duration (ms): </label>
+    <input type="number" id="frameDuration" value="100" min="20" max="2000" />
+  </div>
 
-    <div style="position: fixed; bottom: 10px; left: 10px; color: var(--text); font-size: 0.9em;">
-        Tip: Draw with left mouse, add frames with "+ Frame"
-    </div>
+  <h3 class="timeline-label">Your Frames:</h3>
+  <div id="timeline"></div>
+  <div class="loading">Exporting GIF...</div>
 
-    <script>
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
-        let currentFrame = 0;
-        let frames = [[]];
-        let isDrawing = false;
-        let tool = 'select';
-        let tempCanvas = document.createElement('canvas');
-        let tempCtx = tempCanvas.getContext('2d');
-        let shapeStartPos = null;
-        const GIF_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js';
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    let frames = [];
+    let currentFrame = 0;
+    let isDrawing = false;
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_UNDO_STEPS = 50;
+    let canvasSize = 'default';
 
-        // Theme Management
-        if (!localStorage.getItem('doppleit_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.setAttribute('data-theme', 'dark');
-        }
-        document.getElementById('theme').addEventListener('click', () => {
-            document.body.toggleAttribute('data-theme');
-            localStorage.setItem('doppleit_theme', document.body.hasAttribute('data-theme') ? 'dark' : 'light');
-        });
+    // Initialize canvas with default white background
+    function initCanvas() {
+      const isMobile = window.innerWidth < 768;
+      canvas.width = isMobile ? 300 : 600;
+      canvas.height = canvas.width * (2/3);
+      
+      // Initialize first frame if empty
+      if (frames.length === 0) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const initialFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        frames.push(initialFrame);
+        undoStack.push(initialFrame);
+      }
+      
+      ctx.putImageData(frames[currentFrame], 0, 0);
+    }
 
-        // Canvas Setup
-        function resizeCanvas() {
-            const isMobile = window.innerWidth < 768;
-            const sidebarWidth = isMobile ? 0 : 220;
-            const maxWidth = window.innerWidth - sidebarWidth;
-            
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            tempCtx.drawImage(canvas, 0, 0);
-            
-            canvas.width = isMobile ? Math.min(500, maxWidth) : Math.min(maxWidth, window.innerWidth * 0.8);
-            canvas.height = window.innerHeight * (isMobile ? 0.5 : 0.6);
-            
-            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 
-                        0, 0, canvas.width, canvas.height);
-            tempCanvas.width = tempCanvas.height = 0;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+    function toggleCanvasSize() {
+      canvasSize = canvasSize === 'default' ? 'full' : 'default';
+      const rect = canvas.getBoundingClientRect();
+      
+      if (canvasSize === 'full') {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      } else {
+        initCanvas();
+      }
+      redrawCurrentFrame();
+    }
 
-        // Tools & Drawing
-        document.querySelectorAll('#select, #draw, #shape').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#select, #draw, #shape').forEach(b => 
-                    b.classList.remove('tool-active'));
-                btn.classList.add('tool-active');
-                tool = btn.id;
-                if(tool === 'select') alert('Selection tool coming soon! ✨');
-            });
-        });
+    function redrawCurrentFrame() {
+      ctx.putImageData(frames[currentFrame], 0, 0);
+      updateTimeline();
+    }
 
-        function startDrawing(e) {
-            isDrawing = true;
-            if(tool === 'draw') {
-                frames[currentFrame].push({
-                    type: 'path',
-                    points: [getMousePos(e)],
-                    color: document.getElementById('color').value,
-                    size: document.getElementById('size').value
-                });
-            } else if(tool === 'shape') {
-                shapeStartPos = getMousePos(e);
-            }
-        }
+    // Event listeners
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchend', stopDrawing);
+    document.getElementById('color').addEventListener('input', updateBrush);
+    document.getElementById('brushSize').addEventListener('input', updateBrush);
+    document.getElementById('frameDuration').addEventListener('change', function() {
+      this.value = Math.max(20, Math.min(2000, parseInt(this.value) || 100));
+    });
 
-        function draw(e) {
-            if (!isDrawing) return;
-            
-            if(tool === 'draw') {
-                const pos = getMousePos(e);
-                const currentPath = frames[currentFrame][frames[currentFrame].length - 1];
-                currentPath.points.push(pos);
-                redraw();
-            } else if(tool === 'shape') {
-                redraw();
-                const currentPos = getMousePos(e);
-                ctx.beginPath();
-                ctx.rect(shapeStartPos.x, shapeStartPos.y, 
-                        currentPos.x - shapeStartPos.x, 
-                        currentPos.y - shapeStartPos.y);
-                ctx.strokeStyle = document.getElementById('color').value;
-                ctx.lineWidth = document.getElementById('size').value;
-                ctx.stroke();
-            }
-        }
+    function handleTouch(e) {
+      e.preventDefault();
+      if(e.touches.length > 0) startDrawing(e.touches[0]);
+      if(e.type === 'touchmove') draw(e.touches[0]);
+    }
 
-        function stopDrawing(e) {
-            if(tool === 'shape' && shapeStartPos) {
-                const endPos = getMousePos(e);
-                frames[currentFrame].push({
-                    type: 'rect',
-                    start: shapeStartPos,
-                    end: endPos,
-                    color: document.getElementById('color').value,
-                    size: document.getElementById('size').value,
-                    fill: document.getElementById('fill').checked
-                });
-                redraw();
-            }
-            isDrawing = false;
-            shapeStartPos = null;
-        }
+    function updateBrush() {
+      ctx.strokeStyle = document.getElementById('color').value;
+      ctx.lineWidth = document.getElementById('brushSize').value;
+    }
 
-        // Frame Management
-        document.getElementById('prev').addEventListener('click', () => {
-            if (currentFrame > 0) currentFrame--;
-            redraw();
-            updateTimeline();
-            updateFrameCounter();
-        });
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
 
-        document.getElementById('next').addEventListener('click', () => {
-            if (currentFrame < frames.length - 1) currentFrame++;
-            redraw();
-            updateTimeline();
-            updateFrameCounter();
-        });
+    function saveState() {
+      const currentState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      undoStack.push(currentState);
+      if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
+      redoStack = [];
+      frames[currentFrame] = currentState;
+      updateTimeline();
+    }
 
-        document.getElementById('reset').addEventListener('click', () => {
-            if(confirm('Clear all frames?')) {
-                frames = [[]];
-                currentFrame = 0;
-                redraw();
-                updateTimeline();
-                updateFrameCounter();
-            }
-        });
-
-        function updateFrameCounter() {
-            document.getElementById('frameCount').textContent = 
-                `Frame ${currentFrame + 1}/${frames.length}`;
-        }
-
-        // Export & Rendering
-        async function exportGif() {
-            const gif = new GIF({ workers: 2, quality: 10, workerScript: GIF_SCRIPT_URL });
-            const originalFrame = currentFrame;
-
-            frames.forEach((_, i) => {
-                redraw(i);
-                gif.addFrame(ctx, { copy: true, delay: 1000/12 });
-            });
-
-            gif.on('finished', blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `doppleit-${Date.now()}.gif`;
-                a.click();
-                URL.revokeObjectURL(url);
-                redraw(originalFrame);
-            });
-
-            gif.render();
-        }
-
-        function drawElement(element, ctxToUse = ctx) {
-            if(element.type === 'path') {
-                ctxToUse.beginPath();
-                ctxToUse.strokeStyle = element.color;
-                ctxToUse.lineWidth = element.size;
-                element.points.forEach((p, i) => {
-                    if(i === 0) ctxToUse.moveTo(p.x, p.y);
-                    else ctxToUse.lineTo(p.x, p.y);
-                });
-                ctxToUse.stroke();
-            } else if(element.type === 'rect') {
-                ctxToUse.beginPath();
-                ctxToUse.rect(element.start.x, element.start.y, 
-                            element.end.x - element.start.x, 
-                            element.end.y - element.start.y);
-                if(element.fill) {
-                    ctxToUse.fillStyle = element.color;
-                    ctxToUse.fill();
-                }
-                ctxToUse.strokeStyle = element.color;
-                ctxToUse.lineWidth = element.size;
-                ctxToUse.stroke();
-            }
-        }
-
-        function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-        }
-
-        function redraw(frame = currentFrame) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if(frames[frame]) {
-                frames[frame].forEach(element => drawElement(element));
-            }
-        }
-
-        // Initialization
-        if(!localStorage.getItem('doppleit_help')) {
-            alert('Welcome to Doppleit Lite!\n\nQuick Start:\n1. Draw with brush/shape tools\n2. Add frames for animation\n3. Preview with ▶\n4. Export GIF when ready!');
-            localStorage.setItem('doppleit_help', 'true');
-        }
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .catch(err => console.log('SW registration failed:', err));
-        }
-
-        // Event Listeners
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        document.getElementById('play').addEventListener('click', togglePlay);
-        document.getElementById('addFrame').addEventListener('click', addFrame);
-        document.getElementById('deleteFrame').addEventListener('click', deleteFrame);
-        document.getElementById('exportGif').addEventListener('click', exportGif);
-
-        let isPlaying = false;
-        let frameInterval;
-        function togglePlay() {
-            isPlaying = !isPlaying;
-            document.getElementById('play').textContent = isPlaying ? '⏸' : '▶';
-            if(isPlaying) {
-                frameInterval = setInterval(nextFrame, 1000/12);
-            } else {
-                clearInterval(frameInterval);
-            }
-        }
-
-        function nextFrame() {
-            currentFrame = (currentFrame < frames.length - 1) ? currentFrame + 1 : 0;
-            redraw();
-            updateTimeline();
-            updateFrameCounter();
-        }
-
-        function addFrame() {
-            frames.push([]);
-            currentFrame = frames.length - 1;
-            updateTimeline();
-            updateFrameCounter();
-        }
-
-        function deleteFrame() {
-            if(frames.length <= 1) return;
-            frames.splice(currentFrame, 1);
-            currentFrame = Math.min(currentFrame, frames.length - 1);
-            if(frames.length < 1) frames = [[]];
-            redraw();
-            updateTimeline();
-            updateFrameCounter();
-        }
-
-        function updateTimeline() {
-            const container = document.getElementById('frames');
-            container.innerHTML = '';
-            
-            frames.forEach((frame, i) => {
-                const thumb = document.createElement('canvas');
-                thumb.className = `frame-thumb ${i === currentFrame ? 'active-frame' : ''}`;
-                thumb.width = 100;
-                thumb.height = 100;
-                
-                const thumbCtx = thumb.getContext('2d');
-                thumbCtx.scale(100/canvas.width, 100/canvas.height);
-                frame.forEach(element => drawElement(element, thumbCtx));
-                
-                thumb.addEventListener('click', () => {
-                    currentFrame = i;
-                    redraw();
-                    updateTimeline();
-                    updateFrameCounter();
-                });
-                container.appendChild(thumb);
-            });
-        }
-
-        // Initial render
+    function undo() {
+      if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        ctx.putImageData(undoStack[undoStack.length-1], 0, 0);
         updateTimeline();
-        updateFrameCounter();
-    </script>
+      }
+    }
+
+    function redo() {
+      if (redoStack.length > 0) {
+        const state = redoStack.pop();
+        undoStack.push(state);
+        ctx.putImageData(state, 0, 0);
+        updateTimeline();
+      }
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      saveState();
+      const pos = getCanvasCoordinates(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      draw(e);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pos = getCanvasCoordinates(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      if (isDrawing) {
+        ctx.closePath();
+        isDrawing = false;
+        saveState();
+      }
+    }
+
+    function addFrame() {
+      const newFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      frames.push(newFrame);
+      currentFrame = frames.length - 1;
+      undoStack = [newFrame];
+      redoStack = [];
+      updateTimeline();
+    }
+
+    function updateTimeline() {
+      const timeline = document.getElementById('timeline');
+      timeline.innerHTML = '';
+      
+      frames.forEach((frame, i) => {
+        const thumb = document.createElement('canvas');
+        thumb.className = `frame-thumb ${i === currentFrame ? 'active-frame' : ''}`;
+        thumb.width = 80;
+        thumb.height = 60;
+        
+        // Create temporary canvas for scaling
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCanvas.getContext('2d').putImageData(frame, 0, 0);
+        
+        thumb.getContext('2d').drawImage(tempCanvas, 0, 0, 80, 60);
+        thumb.onclick = () => {
+          currentFrame = i;
+          ctx.putImageData(frame, 0, 0);
+          updateTimeline();
+        };
+        timeline.appendChild(thumb);
+      });
+    }
+
+    async function exportGif() {
+      if(frames.length === 0 || frames.every(f => !f.data)) {
+        alert('No animation frames to export!');
+        return;
+      }
+
+      const loader = document.querySelector('.loading');
+      loader.style.display = 'block';
+      document.getElementById('export').disabled = true;
+
+      try {
+        const duration = parseInt(document.getElementById('frameDuration').value) || 100;
+        const gif = new GIF({
+          workers: 4,
+          quality: 10,
+          width: canvas.width,
+          height: canvas.height
+        });
+
+        frames.forEach(frame => {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+          tempCanvas.getContext('2d').putImageData(frame, 0, 0);
+          gif.addFrame(tempCanvas, {delay: duration});
+        });
+
+        gif.on('finished', blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'animation.gif';
+          a.click();
+          URL.revokeObjectURL(url);
+          loader.style.display = 'none';
+          document.getElementById('export').disabled = false;
+        });
+
+        gif.render();
+      } catch (error) {
+        alert('Export failed: ' + error.message);
+        loader.style.display = 'none';
+        document.getElementById('export').disabled = false;
+      }
+    }
+
+    // Initialize application
+    initCanvas();
+    window.addEventListener('resize', () => {
+      if (canvasSize === 'default') initCanvas();
+    });
+    updateTimeline();
+  </script>
 </body>
 </html>

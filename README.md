@@ -1,95 +1,78 @@
-# 🎞️ Doppleit Animate v1 – Preview Edition  
-**Software that reflects your creativity.**
+# 🎨 Doppleit Animate Lite v2.4
 
-![Doppleit Logo](https://doppleitvector.netlify.app/Assets/doppleit-logo.svg)
-
----
-
-## ✨ What is Doppleit Animate?
-
-**Doppleit Animate** is a professional-grade animation suite that runs entirely in your browser.  
-From 2D keyframes to 3D object manipulation, you can storyboard, animate, and export—all without installs.
-
-Built for creators, designers, and motion artists who want power without friction.
+**The simplest way to create frame-by-frame animations — right in your browser.**
 
 ---
 
-## 🚀 Features (Preview Version)
+### 🚀 What is Doppleit Animate Lite?
 
-- ✅ **2D/3D Keyframe Animation**
-- 🎞️ **Timeline Editor with Frame Navigation**
-- 🧠 **Real-Time Preview & Playback Controls**
-- 🖼️ **Import / Export Scenes (JSON, PNG, SVG)**
-- ✍️ **On-Canvas Drawing & Path Animation**
-- 💾 **Save / Load Project State**
-- ⌨️ **Keyboard Shortcuts for Power Users**
-- 🌙 **Dark Mode + Doppleit UI Styling**
-- ♿ **Accessible and Mobile-Ready**
+**Doppleit Animate Lite** is a lightweight, mobile-friendly animation tool built for speed, clarity, and creativity.
+
+Whether you're sketching a loop, prototyping a GIF, or letting a 10-year-old bring a character to life — Animate Lite gives you everything you need and nothing you don’t.
 
 ---
 
-## ⚙️ How to Use
+### ✅ Features
 
-1. **Launch the App:**  
-   Go to [doppleitvector.netlify.app/animate](https://doppleitvector.netlify.app/animate)
-
-2. **Draw or Import Assets:**  
-   Use vector tools or upload graphics for animation.
-
-3. **Animate with Timeline:**  
-   Add keyframes, drag to move, and play in real-time.
-
-4. **Save or Export:**  
-   - **Save** to local project file (JSON)  
-   - **Export** to PNG, SVG, or vector animation JSON
+- ✏️ **Freehand Drawing** with smooth brush control  
+- 🎞 **Frame-by-Frame Animation** timeline  
+- 🔄 **Undo / Redo Stack** (up to 50 steps)  
+- 📱 **Touch & Mobile Support** (works on phones & tablets)  
+- 🎬 **Custom Frame Duration** per export  
+- 🖼 **Thumbnail Preview Timeline**  
+- 🧠 **Aspect-Ratio Aware Canvas Scaling**  
+- 📤 **Export as GIF** (with loading indicator and error recovery)  
+- 🌙 **Clean, Accessible UI** with zero fluff  
 
 ---
 
-## 🧠 Why It Matters
+### 📦 Why “Lite”?
 
-Most animation tools are slow, expensive, or locked behind paywalls.  
-**Doppleit Animate** changes that.
+Doppleit Animate Lite is designed to **load instantly, run anywhere**, and feel **fast and focused** — even on older or underpowered devices.
 
-It’s:
-- 🔥 Fast
-- 🧩 Modular
-- ✨ Free (for now)
+No installs.  
+No logins.  
+No waiting.
 
-No installs. No gatekeeping. Just expression.
+You get creative freedom in one click.
 
 ---
 
-## 🚨 What’s Next?
+### 🛠 Under the Hood
 
-The **Pro version** is almost here.
-
-Coming soon:
-> 🎚️ Advanced curve controls  
-> 🔄 Motion tweening + easing presets  
-> 🎛️ Keyframe inspector  
-> 🧱 Timeline layers & audio tracks  
-> 🌐 Cloud sync + versioning  
-> 🧩 Plugin system for FX and camera
-
-This is just the beginning.
+- No frameworks — pure vanilla JavaScript and HTML5 Canvas  
+- Uses [gif.js](https://github.com/jnordberg/gif.js) for export  
+- Frame data stored as `ImageData` snapshots  
+- Fully encapsulated undo/redo with isolated frame rendering  
+- Touch-action optimizations and mobile-aware layout
 
 ---
 
-## 📬 Feedback & Access
+### ⚡️ What's Coming in **Pro**?
 
-Found a bug? Got a feature idea?
+The upcoming **Doppleit Animate Pro** edition will offer:
 
-Email us: [team@doppleit.com](mailto:team@doppleit.com)
+- 🎚 Timeline keyframe editing  
+- 🧩 Layers and object selection  
+- ✨ Onion skinning  
+- 🗂 Project saving & loading  
+- 🖌 More brushes & effects  
+- ⚙️ Advanced export formats  
+- 🌐 PWA install mode
+
+Stay tuned — it's already in final development.
 
 ---
 
-## 🪪 License
+### 🧪 Want to Test?
 
-Preview version is free for non-commercial use.  
-Pro version will require a license key.
+Use it. Break it. Animate something weird.  
+Your feedback helps shape **v2.5 and Pro**.
+
+This is **creative software built by artists for artists** — so have fun with it.
 
 ---
 
-**Doppleit Animate**  
-*Where your motion meets meaning.*  
-[www.doppleit.com](https://doppleitvector.netlify.app/animate)
+### 🌐 Made with Doppleit
+
+> Software that reflects your creativity.
