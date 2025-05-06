@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <title>Doppleit Animate Lite v2.4</title>
+  <title>Doppleit Animate Pro v3.0</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>" />
   <style>
     :root {
       --primary: #A084CA;
+      --primary-dark: #8064A8;
       --bg: #E6EFFF;
       --timeline: #2A2D4A;
       --text: #333;
+      --light-gray: #f0f0f0;
+      --medium-gray: #ccc;
+      --dark-gray: #888;
     }
     body {
       font-family: Arial, sans-serif;
@@ -23,23 +27,41 @@
       margin: 10px auto;
       border: 2px solid var(--primary);
       max-width: 95%;
-      height: auto!important;
+      height: auto !important;
       aspect-ratio: 3/2;
-      touch-action: none;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     }
     .controls {
       display: flex;
       flex-wrap: wrap;
       padding: 10px;
       gap: 10px;
-      background: var(--bg);
+      background: var(--light-gray);
+      border-bottom: 1px solid var(--medium-gray);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     button {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 16px;
       cursor: pointer;
+      font-size: 1em;
+      border-radius: 4px;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: var(--primary-dark);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    button:disabled {
+      background: var(--medium-gray);
+      cursor: not-allowed;
+      transform: none;
     }
     .loading {
       display: none;
@@ -56,6 +78,29 @@
     .control-group {
       padding: 10px;
       font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+      border: 1px solid var(--medium-gray);
+      border-radius: 4px;
+      background: white;
+    }
+    .tool-btn {
+      padding: 5px;
+      background: var(--light-gray);
+      border: 1px solid var(--medium-gray);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .tool-btn.active {
+      background: var(--primary);
+      color: white;
     }
     #timeline {
       display: flex;
@@ -63,276 +108,2184 @@
       padding: 10px;
       background: var(--timeline);
       overflow-x: auto;
+      height: 85px;
     }
     .frame-thumb {
       border: 2px solid transparent;
       cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .frame-thumb:hover {
+      transform: scale(1.05);
     }
     .active-frame {
       border-color: var(--primary);
+      box-shadow: 0 0 5px var(--primary);
     }
     .timeline-label {
       padding: 10px 0 0 15px;
       margin: 0;
       font-weight: bold;
       color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .timeline-controls {
+      display: flex;
+      gap: 5px;
+      margin-right: 15px;
     }
     #sizeToggle {
       position: fixed;
       bottom: 20px;
       left: 20px;
+      z-index: 5;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      min-width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--timeline);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .onion-container {
+      position: relative;
+    }
+    #onionCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      opacity: 0.3;
     }
     @media (max-width: 768px) {
       canvas { width: 95% !important; }
+      .controls button, .control-group input {
+        padding: 10px 20px;
+        font-size: 1.1em;
+      }
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: white;
+      min-width: 160px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 20;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .dropdown-item:hover {
+      background: var(--light-gray);
+    }
+    /* Keyboard shortcuts help */
+    #shortcutsHelp {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .shortcuts-modal {
+      max-width: 500px;
+    }
+    .shortcut-row {
+      display: flex;
+      margin: 5px 0;
+    }
+    .shortcut-key {
+      background: var(--light-gray);
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--medium-gray);
+      margin-right: 10px;
+      font-family: monospace;
+    }
+    .shortcut-desc {
+      flex: 1;
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <button onclick="exportGif()" id="export">Export GIF</button>
-    <button onclick="addFrame()">➕ Frame</button>
-    <button onclick="undo()">↩ Undo</button>
-    <button onclick="redo()">↪ Redo</button>
+    <button aria-label="Export animation as GIF" onclick="app.exportGif()" id="exportBtn">Export GIF</button>
+    <div class="dropdown">
+      <button aria-label="File operations">File</button>
+      <div class="dropdown-content">
+        <div class="dropdown-item" onclick="app.showModal('newProjectModal')">New Project</div>
+        <div class="dropdown-item" onclick="app.saveProject()">Save Project</div>
+        <div class="dropdown-item" onclick="app.showModal('loadProjectModal')">Load Project</div>
+      </div>
+    </div>
+    <button aria-label="Add new frame" onclick="app.addFrame()" title="Add new frame" id="addFrameBtn">Add Frame</button>
+    <button aria-label="Undo last action" onclick="app.undo()" id="undoBtn">Undo</button>
+    <button aria-label="Redo last action" onclick="app.redo()" id="redoBtn">Redo</button>
+    <button aria-label="Clear current frame" onclick="app.confirmClearCanvas()" title="Clear current frame" id="clearBtn">Clear</button>
+    <button aria-label="Delete current frame" onclick="app.confirmDeleteFrame()" title="Delete current frame" id="deleteBtn">Delete</button>
+    <button aria-label="Preview animation" onclick="app.previewAnimation()" title="Preview animation" id="previewBtn">Preview</button>
     <div class="control-group">
-      <label>Brush Size: </label>
-      <input type="range" id="brushSize" min="1" max="50" value="3">
+      <label for="brushSize">Brush: </label>
+      <input type="range" id="brushSize" min="1" max="50" value="3" aria-label="Adjust brush size">
+      <span id="brushSizeValue">3px</span>
     </div>
     <div class="control-group">
-      <label>Color: </label>
-      <input type="color" id="color" value="#A084CA">
+      <label for="color">Color: </label>
+      <input type="color" id="color" value="#A084CA" aria-label="Select brush color">
+    </div>
+    <div class="tool-group">
+      <div class="tool-btn active" id="brushTool" onclick="app.setTool('brush')" title="Brush Tool (B)">🖌️</div>
+      <div class="tool-btn" id="lineTool" onclick="app.setTool('line')" title="Line Tool (L)">📏</div>
+      <div class="tool-btn" id="rectTool" onclick="app.setTool('rect')" title="Rectangle Tool (R)">□</div>
+      <div class="tool-btn" id="circleTool" onclick="app.setTool('circle')" title="Circle Tool (C)">○</div>
+      <div class="tool-btn" id="fillTool" onclick="app.setTool('fill')" title="Fill Tool (F)">🪣</div>
+    </div>
+    <div class="control-group">
+      <label for="onionSkinning">Onion Skin:</label>
+      <input type="checkbox" id="onionSkinning" onchange="app.toggleOnionSkin()">
     </div>
   </div>
 
-  <button id="sizeToggle" onclick="toggleCanvasSize()">Fit to Screen</button>
+  <button id="sizeToggle" onclick="app.toggleCanvasSize()" aria-label="Toggle canvas size">Fit to Screen</button>
+  <div id="shortcutsHelp" title="Keyboard Shortcuts">?</div>
   
-  <canvas id="mainCanvas"></canvas>
+  <div class="onion-container">
+    <canvas id="onionCanvas"></canvas>
+    <canvas id="mainCanvas"></canvas>
+  </div>
   
   <div class="control-group">
     <label for="frameDuration">Frame Duration (ms): </label>
-    <input type="number" id="frameDuration" value="100" min="20" max="2000" />
+    <input type="number" id="frameDuration" value="100" min="20" max="2000" aria-label="Set frame duration in milliseconds" />
+    <button id="copyFrameBtn" onclick="app.copyFrame()" title="Copy Frame (Ctrl+C)">Copy</button>
+    <button id="pasteFrameBtn" onclick="app.pasteFrame()" title="Paste Frame (Ctrl+V)">Paste</button>
   </div>
 
-  <h3 class="timeline-label">Your Frames:</h3>
+  <div class="timeline-label">
+    <span>Your Frames:</span>
+    <div class="timeline-controls">
+      <button id="moveLeftBtn" onclick="app.moveFrameLeft()" title="Move Frame Left">←</button>
+      <button id="moveRightBtn" onclick="app.moveFrameRight()" title="Move Frame Right">→</button>
+      <button id="duplicateFrameBtn" onclick="app.duplicateFrame()" title="Duplicate Frame">+</button>
+    </div>
+  </div>
   <div id="timeline"></div>
-  <div class="loading">Exporting GIF...</div>
+  
+  <!-- Loading indicator -->
+  <div class="loading" id="loadingIndicator">Processing...</div>
+  
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- Confirmation Modal -->
+  <div class="modal" id="confirmModal">
+    <div class="modal-content">
+      <h3 id="confirmTitle">Confirm Action</h3>
+      <p id="confirmMessage">Are you sure you want to proceed?</p>
+      <div class="modal-buttons">
+        <button id="cancelBtn" onclick="app.hideModal('confirmModal')">Cancel</button>
+        <button id="confirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- New Project Modal -->
+  <div class="modal" id="newProjectModal">
+    <div class="modal-content">
+      <h3>New Project</h3>
+      <p>Create a new project? All unsaved work will be lost.</p>
+      <div class="modal-buttons">
+        <button onclick="app.hideModal('newProjectModal')">Cancel</button>
+        <button onclick="app.newProject()">Create New</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Load Project Modal -->
+  <div class="modal" id="loadProjectModal">
+    <div class="modal-content">
+      <h3>Load Project</h3>
+      <p>Select a saved project to load:</p>
+      <select id="projectList"></select>
+      <div class="modal-buttons">
+        <button onclick="app.hideModal('loadProjectModal')">Cancel</button>
+        <button onclick="app.loadSelectedProject()">Load</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Keyboard Shortcuts Modal -->
+  <div class="modal" id="shortcutsModal">
+    <div class="modal-content shortcuts-modal">
+      <h3>Keyboard Shortcuts</h3>
+      <div class="shortcut-row">
+        <div class="shortcut-key">B</div>
+        <div class="shortcut-desc">Brush Tool</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">L</div>
+        <div class="shortcut-desc">Line Tool</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">R</div>
+        <div class="shortcut-desc">Rectangle Tool</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">C</div>
+        <div class="shortcut-desc">Circle Tool</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">F</div>
+        <div class="shortcut-desc">Fill Tool</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Ctrl+Z</div>
+        <div class="shortcut-desc">Undo</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Ctrl+Y</div>
+        <div class="shortcut-desc">Redo</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Ctrl+C</div>
+        <div class="shortcut-desc">Copy Frame</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Ctrl+V</div>
+        <div class="shortcut-desc">Paste Frame</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Delete</div>
+        <div class="shortcut-desc">Clear Canvas</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">+</div>
+        <div class="shortcut-desc">Add Frame</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-key">Space</div>
+        <div class="shortcut-desc">Play/Stop Preview</div>
+      </div>
+      <div class="modal-buttons">
+        <button onclick="app.hideModal('shortcutsModal')">Close</button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-  <script>
-    const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d');
-    let frames = [];
-    let currentFrame = 0;
-    let isDrawing = false;
-    let undoStack = [];
-    let redoStack = [];
-    const MAX_UNDO_STEPS = 50;
-    let canvasSize = 'default';
-
-    // Initialize canvas with default white background
-    function initCanvas() {
-      const isMobile = window.innerWidth < 768;
-      canvas.width = isMobile ? 300 : 600;
-      canvas.height = canvas.width * (2/3);
-      
-      // Initialize first frame if empty
-      if (frames.length === 0) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const initialFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        frames.push(initialFrame);
-        undoStack.push(initialFrame);
-      }
-      
-      ctx.putImageData(frames[currentFrame], 0, 0);
-    }
-
-    function toggleCanvasSize() {
-      canvasSize = canvasSize === 'default' ? 'full' : 'default';
-      const rect = canvas.getBoundingClientRect();
-      
-      if (canvasSize === 'full') {
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-      } else {
-        initCanvas();
-      }
-      redrawCurrentFrame();
-    }
-
-    function redrawCurrentFrame() {
-      ctx.putImageData(frames[currentFrame], 0, 0);
-      updateTimeline();
-    }
-
-    // Event listeners
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('touchstart', handleTouch);
-    canvas.addEventListener('touchmove', handleTouch);
-    canvas.addEventListener('touchend', stopDrawing);
-    document.getElementById('color').addEventListener('input', updateBrush);
-    document.getElementById('brushSize').addEventListener('input', updateBrush);
-    document.getElementById('frameDuration').addEventListener('change', function() {
-      this.value = Math.max(20, Math.min(2000, parseInt(this.value) || 100));
-    });
-
-    function handleTouch(e) {
-      e.preventDefault();
-      if(e.touches.length > 0) startDrawing(e.touches[0]);
-      if(e.type === 'touchmove') draw(e.touches[0]);
-    }
-
-    function updateBrush() {
-      ctx.strokeStyle = document.getElementById('color').value;
-      ctx.lineWidth = document.getElementById('brushSize').value;
-    }
-
-    function getCanvasCoordinates(e) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: (e.clientX - rect.left) * (canvas.width / rect.width),
-        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+<script>
+    // Application namespace to avoid globals
+    const app = (function() {
+      // State management
+      const state = {
+        canvas: null,
+        ctx: null,
+        onionCanvas: null,
+        onionCtx: null,
+        frames: [],
+        currentFrame: 0,
+        isDrawing: false,
+        undoStacks: [],
+        redoStacks: [],
+        MAX_UNDO_STEPS: 50,
+        canvasSize: 'default',
+        thumbCache: new Map(),
+        lastTouchPos: null,
+        isPreviewing: false,
+        currentTool: 'brush',
+        onionSkinning: false,
+        copyBuffer: null,
+        startPos: { x: 0, y: 0 },
+        endPos: { x: 0, y: 0 },
+        
+        // Initialize the app state
+        init() {
+          this.canvas = document.getElementById('mainCanvas');
+          this.ctx = this.canvas.getContext('2d');
+          this.onionCanvas = document.getElementById('onionCanvas');
+          this.onionCtx = this.onionCanvas.getContext('2d');
+          
+          // Adjust canvas size
+          const isMobile = window.innerWidth < 768;
+          this.canvas.width = isMobile ? 300 : 600;
+          this.canvas.height = this.canvas.width * (2/3);
+          this.onionCanvas.width = this.canvas.width;
+          this.onionCanvas.height = this.canvas.height;
+          
+          // Add first frame if needed
+          if (this.frames.length === 0) {
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            const initialFrame = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            this.frames.push(initialFrame);
+            this.undoStacks.push([initialFrame]);
+            this.redoStacks.push([]);
+          }
+          
+          this.ctx.putImageData(this.frames[this.currentFrame], 0, 0);
+          this.ctx.lineCap = 'round';
+          this.ctx.lineJoin = 'round';
+          this.updateButtonStates();
+          
+          // Set up event listeners
+          this.setupEventListeners();
+          this.loadSavedProjects();
+        },
+        
+        setupEventListeners() {
+          // Canvas drawing events
+          this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+          this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+          this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+          this.canvas.addEventListener('mouseleave', () => this.stopDrawing());
+          
+          // Touch events for mobile
+          this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e));
+          this.canvas.addEventListener('touchmove', (e) => this.handleTouch(e));
+          this.canvas.addEventListener('touchend', () => this.stopDrawing());
+          
+          // Tool controls
+          document.getElementById('color').addEventListener('input', () => this.updateBrush());
+          document.getElementById('brushSize').addEventListener('input', () => {
+            this.updateBrush();
+            document.getElementById('brushSizeValue').textContent = `${document.getElementById('brushSize').value}px`;
+          });
+          
+          document.getElementById('frameDuration').addEventListener('input', function() {
+            this.value = Math.max(20, Math.min(2000, parseInt(this.value) || 100));
+          });
+          
+          // Keyboard shortcuts
+          document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+          
+          // Help button
+          document.getElementById('shortcutsHelp').addEventListener('click', () => this.showModal('shortcutsModal'));
+          
+          // Window resize event
+          let resizeTimeout;
+          window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+              if (this.canvasSize === 'default') this.initCanvas();
+            }, 200);
+          });
+        },
+        
+        handleKeyboardShortcuts(e) {
+          // Don't trigger shortcuts when typing in input fields
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          
+          if (e.ctrlKey) {
+            switch (e.key.toLowerCase()) {
+              case 'z':
+                e.preventDefault();
+                this.undo();
+                break;
+              case 'y':
+                e.preventDefault();
+                this.redo();
+                break;
+              case 'c':
+                e.preventDefault();
+                this.copyFrame();
+                break;
+              case 'v':
+                e.preventDefault();
+                this.pasteFrame();
+                break;
+              case 's':
+                e.preventDefault();
+                this.saveProject();
+                break;
+            }
+          } else {
+            switch (e.key.toLowerCase()) {
+              case 'b':
+                this.setTool('brush');
+                break;
+              case 'l':
+                this.setTool('line');
+                break;
+              case 'r':
+                this.setTool('rect');
+                break;
+              case 'c':
+                this.setTool('circle');
+                break;
+              case 'f':
+                this.setTool('fill');
+                break;
+              case '+':
+              case '=':
+                this.addFrame();
+                break;
+              case 'delete':
+                this.confirmClearCanvas();
+                break;
+              case ' ':
+                e.preventDefault();
+                this.previewAnimation();
+                break;
+            }
+          }
+        },
+        
+        initCanvas() {
+          const isMobile = window.innerWidth < 768;
+          this.canvas.width = isMobile ? 300 : 600;
+          this.canvas.height = this.canvas.width * (2/3);
+          this.onionCanvas.width = this.canvas.width;
+          this.onionCanvas.height = this.canvas.height;
+          
+          this.ctx.putImageData(this.frames[this.currentFrame], 0, 0);
+          this.updateButtonStates();
+          
+          if (this.onionSkinning) {
+            this.updateOnionSkin();
+          }
+        },
+        
+        setTool(tool) {
+          this.currentTool = tool;
+          
+          // Update UI
+          document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          document.getElementById(`${tool}Tool`).classList.add('active');
+          
+          // Update cursor based on tool
+          switch (tool) {
+            case 'brush':
+            case 'fill':
+              this.canvas.style.cursor = 'crosshair';
+              break;
+            case 'line':
+            case 'rect': 
+            case 'circle':
+              this.canvas.style.cursor = 'crosshair';
+              break;
+            default:
+              this.canvas.style.cursor = 'default';
+          }
+          
+          this.showToast(`${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected`);
+        },
+        
+        updateButtonStates() {
+          document.getElementById('undoBtn').disabled = this.undoStacks[this.currentFrame].length <= 1;
+          document.getElementById('redoBtn').disabled = this.redoStacks[this.currentFrame].length === 0;
+          document.getElementById('deleteBtn').disabled = this.frames.length <= 1;
+          document.getElementById('previewBtn').disabled = this.frames.length <= 1;
+          document.getElementById('moveLeftBtn').disabled = this.currentFrame === 0;
+          document.getElementById('moveRightBtn').disabled = this.currentFrame === this.frames.length - 1;
+          document.getElementById('pasteFrameBtn').disabled = !this.copyBuffer;
+        }
       };
-    }
 
-    function saveState() {
-      const currentState = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      undoStack.push(currentState);
-      if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
-      redoStack = [];
-      frames[currentFrame] = currentState;
-      updateTimeline();
-    }
-
-    function undo() {
-      if (undoStack.length > 1) {
-        redoStack.push(undoStack.pop());
-        ctx.putImageData(undoStack[undoStack.length-1], 0, 0);
-        updateTimeline();
-      }
-    }
-
-    function redo() {
-      if (redoStack.length > 0) {
-        const state = redoStack.pop();
-        undoStack.push(state);
-        ctx.putImageData(state, 0, 0);
-        updateTimeline();
-      }
-    }
-
-    function startDrawing(e) {
-      isDrawing = true;
-      saveState();
-      const pos = getCanvasCoordinates(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      draw(e);
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      const pos = getCanvasCoordinates(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-
-    function stopDrawing() {
-      if (isDrawing) {
-        ctx.closePath();
-        isDrawing = false;
-        saveState();
-      }
-    }
-
-    function addFrame() {
-      const newFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      frames.push(newFrame);
-      currentFrame = frames.length - 1;
-      undoStack = [newFrame];
-      redoStack = [];
-      updateTimeline();
-    }
-
-    function updateTimeline() {
-      const timeline = document.getElementById('timeline');
-      timeline.innerHTML = '';
+      return {
+        // Initialize the application
+        init() {
+          state.init();
+          this.updateTimeline();
+        },
       
-      frames.forEach((frame, i) => {
-        const thumb = document.createElement('canvas');
-        thumb.className = `frame-thumb ${i === currentFrame ? 'active-frame' : ''}`;
-        thumb.width = 80;
-        thumb.height = 60;
+        // Toggle canvas size between default and full screen
+        toggleCanvasSize() {
+          state.canvasSize = state.canvasSize === 'default' ? 'full' : 'default';
+          const rect = state.canvas.getBoundingClientRect();
+          
+          try {
+            if (state.canvasSize === 'full') {
+              const newWidth = rect.width;
+              const newHeight = rect.width * (2/3);
+              state.frames = state.frames.map(frame => this.scaleFrame(frame, newWidth, newHeight));
+              state.canvas.width = newWidth;
+              state.canvas.height = newHeight;
+              state.onionCanvas.width = newWidth;
+              state.onionCanvas.height = newHeight;
+            } else {
+              const newWidth = window.innerWidth < 768 ? 300 : 600;
+              const newHeight = newWidth * (2/3);
+              state.frames = state.frames.map(frame => this.scaleFrame(frame, newWidth, newHeight));
+              state.canvas.width = newWidth;
+              state.canvas.height = newHeight;
+              state.onionCanvas.width = newWidth;
+              state.onionCanvas.height = newHeight;
+            }
+            
+            state.thumbCache.clear();
+            this.redrawCurrentFrame();
+            
+            const buttonText = state.canvasSize === 'full' ? 'Default Size' : 'Fit to Screen';
+            document.getElementById('sizeToggle').textContent = buttonText;
+            
+            this.showToast(`Canvas size set to ${state.canvasSize === 'full' ? 'full screen' : 'default'}`);
+          } catch (error) {
+            console.error('Error resizing canvas:', error);
+            this.showToast('Error resizing canvas', true);
+          }
+        },
+
+        // Scale an image frame to new dimensions
+        scaleFrame(frame, newWidth, newHeight) {
+          try {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+            tempCanvas.width = frame.width;
+            tempCanvas.height = frame.height;
+            tempCtx.putImageData(frame, 0, 0);
+            
+            const scaledCanvas = document.createElement('canvas');
+            const scaledCtx = scaledCanvas.getContext('2d', { willReadFrequently: true });
+            scaledCanvas.width = newWidth;
+            scaledCanvas.height = newHeight;
+            
+            // Use better scaling algorithm
+            scaledCtx.imageSmoothingEnabled = true;
+            scaledCtx.imageSmoothingQuality = 'high';
+            scaledCtx.drawImage(tempCanvas, 0, 0, newWidth, newHeight);
+            
+            return scaledCtx.getImageData(0, 0, newWidth, newHeight);
+          } catch (error) {
+            console.error('Error scaling frame:', error);
+            this.showToast('Error scaling frame', true);
+            return frame;
+          }
+        },
         
-        // Create temporary canvas for scaling
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        tempCanvas.getContext('2d').putImageData(frame, 0, 0);
+        // Show a toast notification
+        showToast(message, isError = false) {
+          const toast = document.getElementById('toast');
+          toast.textContent = message;
+          toast.style.backgroundColor = isError ? '#FF5555' : '#2A2D4A';
+          toast.style.opacity = 1;
+          
+          setTimeout(() => {
+            toast.style.opacity = 0;
+          }, 3000);
+        },
         
-        thumb.getContext('2d').drawImage(tempCanvas, 0, 0, 80, 60);
-        thumb.onclick = () => {
-          currentFrame = i;
-          ctx.putImageData(frame, 0, 0);
-          updateTimeline();
-        };
-        timeline.appendChild(thumb);
-      });
-    }
-
-    async function exportGif() {
-      if(frames.length === 0 || frames.every(f => !f.data)) {
-        alert('No animation frames to export!');
-        return;
-      }
-
-      const loader = document.querySelector('.loading');
-      loader.style.display = 'block';
-      document.getElementById('export').disabled = true;
-
-      try {
-        const duration = parseInt(document.getElementById('frameDuration').value) || 100;
-        const gif = new GIF({
-          workers: 4,
-          quality: 10,
-          width: canvas.width,
-          height: canvas.height
-        });
-
-        frames.forEach(frame => {
+        // Show modal dialog
+        showModal(modalId) {
+          document.getElementById(modalId).style.display = 'flex';
+        },
+        
+        // Hide modal dialog
+        hideModal(modalId) {
+          document.getElementById(modalId).style.display = 'none';
+        },
+        
+        // Set up confirmation modal with callback
+        confirmAction(title, message, callback) {
+          document.getElementById('confirmTitle').textContent = title;
+          document.getElementById('confirmMessage').textContent = message;
+          
+          const confirmBtn = document.getElementById('confirmBtn');
+          // Remove previous event listeners
+          const newConfirmBtn = confirmBtn.cloneNode(true);
+          confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+          
+          // Add new event listener
+          newConfirmBtn.addEventListener('click', () => {
+            this.hideModal('confirmModal');
+            callback();
+          });
+          
+          this.showModal('confirmModal');
+        },
+        
+        // Show confirmation before clearing canvas
+        confirmClearCanvas() {
+          this.confirmAction(
+            'Clear Canvas', 
+            'Are you sure you want to clear the current frame? This cannot be undone.', 
+            () => this.clearCanvas()
+          );
+        },
+        
+        // Show confirmation before deleting frame
+        confirmDeleteFrame() {
+          this.confirmAction(
+            'Delete Frame', 
+            'Are you sure you want to delete this frame? This cannot be undone.', 
+            () => this.deleteFrame()
+          );
+        }
+      };
+    })();
+  </script>
+<script>
+    // Extend app with drawing functionality
+    Object.assign(app, {
+      // Update brush settings from UI controls
+      updateBrush() {
+        state.ctx.strokeStyle = document.getElementById('color').value;
+        state.ctx.fillStyle = document.getElementById('color').value;
+        state.ctx.lineWidth = document.getElementById('brushSize').value;
+      },
+      
+      // Get canvas coordinates from mouse or touch event
+      getCanvasCoordinates(e) {
+        const rect = state.canvas.getBoundingClientRect();
+        const x = ((e.clientX || e.touches[0].clientX) - rect.left) * (state.canvas.width / rect.width);
+        const y = ((e.clientY || e.touches[0].clientY) - rect.top) * (state.canvas.height / rect.height);
+        return { x, y };
+      },
+      
+      // Handle touch events for mobile drawing
+      handleTouch(e) {
+        e.preventDefault();
+        if (e.touches.length > 0) {
+          if (e.type === 'touchstart') {
+            state.lastTouchPos = this.getCanvasCoordinates(e);
+            this.startDrawing(e);
+          } else if (e.type === 'touchmove') {
+            const currentPos = this.getCanvasCoordinates(e);
+            // Smooth the drawing by averaging the last two positions
+            const smoothedPos = {
+              clientX: (state.lastTouchPos.x + currentPos.x) / 2,
+              clientY: (state.lastTouchPos.y + currentPos.y) / 2
+            };
+            this.draw(smoothedPos);
+            state.lastTouchPos = currentPos;
+          }
+        }
+      },
+      
+      // Save current canvas state for undo
+      saveState() {
+        try {
+          const currentState = state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
+          state.undoStacks[state.currentFrame].push(currentState);
+          
+          // Limit undo stack size to avoid memory issues
+          if (state.undoStacks[state.currentFrame].length > state.MAX_UNDO_STEPS) {
+            state.undoStacks[state.currentFrame].shift();
+          }
+          
+          state.redoStacks[state.currentFrame] = [];
+          state.frames[state.currentFrame] = currentState;
+          state.thumbCache.delete(state.currentFrame);
+          
+          this.updateTimeline();
+          state.updateButtonStates();
+        } catch (error) {
+          console.error('Error saving state:', error);
+          this.showToast('Error saving state', true);
+        }
+      },
+      
+      // Undo last action
+      undo() {
+        if (state.undoStacks[state.currentFrame].length > 1) {
+          try {
+            state.redoStacks[state.currentFrame].push(
+              state.undoStacks[state.currentFrame].pop()
+            );
+            
+            const previousState = state.undoStacks[state.currentFrame][
+              state.undoStacks[state.currentFrame].length - 1
+            ];
+            
+            state.ctx.putImageData(previousState, 0, 0);
+            state.frames[state.currentFrame] = previousState;
+            state.thumbCache.delete(state.currentFrame);
+            
+            this.updateTimeline();
+            state.updateButtonStates();
+            this.showToast('Undo successful');
+          } catch (error) {
+            console.error('Error during undo:', error);
+            this.showToast('Error during undo', true);
+          }
+        }
+      },
+      
+      // Redo previously undone action
+      redo() {
+        if (state.redoStacks[state.currentFrame].length > 0) {
+          try {
+            const redoState = state.redoStacks[state.currentFrame].pop();
+            state.undoStacks[state.currentFrame].push(redoState);
+            
+            state.ctx.putImageData(redoState, 0, 0);
+            state.frames[state.currentFrame] = redoState;
+            state.thumbCache.delete(state.currentFrame);
+            
+            this.updateTimeline();
+            state.updateButtonStates();
+            this.showToast('Redo successful');
+          } catch (error) {
+            console.error('Error during redo:', error);
+            this.showToast('Error during redo', true);
+          }
+        }
+      },
+      
+      // Start drawing process
+      startDrawing(e) {
+        if (state.isPreviewing) return;
+        
+        state.isDrawing = true;
+        const pos = this.getCanvasCoordinates(e);
+        state.startPos = pos;
+        state.endPos = pos;
+        
+        // Handle different tools
+        switch (state.currentTool) {
+          case 'brush':
+            this.saveState();
+            state.ctx.beginPath();
+            state.ctx.moveTo(pos.x, pos.y);
+            this.draw(e);
+            break;
+            
+          case 'fill':
+            this.saveState();
+            this.floodFill(pos.x, pos.y);
+            state.isDrawing = false;
+            break;
+            
+          case 'line':
+          case 'rect':
+          case 'circle':
+            this.saveState();
+            // Just store starting position, will draw on mouse up
+            break;
+        }
+      },
+      
+      // Handle drawing based on current tool
+      draw(e) {
+        if (!state.isDrawing || state.isPreviewing) return;
+        
+        const pos = this.getCanvasCoordinates(e);
+        state.endPos = pos;
+        
+        switch (state.currentTool) {
+          case 'brush':
+            state.ctx.lineTo(pos.x, pos.y);
+            state.ctx.stroke();
+            break;
+            
+          case 'line':
+          case 'rect':
+          case 'circle':
+            // Redraw from the saved state to show preview
+            state.ctx.putImageData(
+              state.undoStacks[state.currentFrame][
+                state.undoStacks[state.currentFrame].length - 1
+              ], 
+              0, 
+              0
+            );
+            
+            // Preview the shape
+            state.ctx.beginPath();
+            
+            if (state.currentTool === 'line') {
+              state.ctx.moveTo(state.startPos.x, state.startPos.y);
+              state.ctx.lineTo(pos.x, pos.y);
+              state.ctx.stroke();
+            } else if (state.currentTool === 'rect') {
+              const width = pos.x - state.startPos.x;
+              const height = pos.y - state.startPos.y;
+              state.ctx.strokeRect(state.startPos.x, state.startPos.y, width, height);
+            } else if (state.currentTool === 'circle') {
+              const radius = Math.sqrt(
+                Math.pow(pos.x - state.startPos.x, 2) + 
+                Math.pow(pos.y - state.startPos.y, 2)
+              );
+              state.ctx.arc(state.startPos.x, state.startPos.y, radius, 0, 2 * Math.PI);
+              state.ctx.stroke();
+            }
+            break;
+        }
+      },
+      
+      // Complete drawing action
+      stopDrawing() {
+        if (state.isDrawing) {
+          if (['line', 'rect', 'circle'].includes(state.currentTool)) {
+            this.draw({ clientX: state.endPos.x, clientY: state.endPos.y });
+          }
+          
+          state.ctx.closePath();
+          state.isDrawing = false;
+          this.saveState();
+        }
+      },
+      
+      // Clear the current canvas
+      clearCanvas() {
+        try {
+          this.saveState();
+          state.ctx.fillStyle = '#FFFFFF';
+          state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+          this.saveState();
+          this.showToast('Canvas cleared');
+        } catch (error) {
+          console.error('Error clearing canvas:', error);
+          this.showToast('Error clearing canvas', true);
+        }
+      },
+      
+      // Redraw the current frame
+      redrawCurrentFrame() {
+        try {
+          state.ctx.putImageData(state.frames[state.currentFrame], 0, 0);
+          this.updateTimeline();
+          state.updateButtonStates();
+          
+          if (state.onionSkinning) {
+            this.updateOnionSkin();
+          }
+        } catch (error) {
+          console.error('Error redrawing frame:', error);
+          this.showToast('Error redrawing frame', true);
+        }
+      },
+      
+      // Toggle onion skinning
+      toggleOnionSkin() {
+        state.onionSkinning = document.getElementById('onionSkinning').checked;
+        
+        if (state.onionSkinning) {
+          this.updateOnionSkin();
+        } else {
+          state.onionCtx.clearRect(0, 0, state.onionCanvas.width, state.onionCanvas.height);
+        }
+        
+        this.showToast(`Onion skinning ${state.onionSkinning ? 'enabled' : 'disabled'}`);
+      },
+      
+      // Update onion skin display
+      updateOnionSkin() {
+        if (!state.onionSkinning) return;
+        
+        // Clear the onion skin canvas
+        state.onionCtx.clearRect(0, 0, state.onionCanvas.width, state.onionCanvas.height);
+        
+        // Get previous frame index
+        const prevIndex = state.currentFrame > 0 ? state.currentFrame - 1 : null;
+        
+        if (prevIndex !== null) {
+          state.onionCtx.globalAlpha = 0.3;
           const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = canvas.width;
-          tempCanvas.height = canvas.height;
-          tempCanvas.getContext('2d').putImageData(frame, 0, 0);
-          gif.addFrame(tempCanvas, {delay: duration});
-        });
-
-        gif.on('finished', blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'animation.gif';
-          a.click();
-          URL.revokeObjectURL(url);
-          loader.style.display = 'none';
-          document.getElementById('export').disabled = false;
-        });
-
-        gif.render();
-      } catch (error) {
-        alert('Export failed: ' + error.message);
-        loader.style.display = 'none';
-        document.getElementById('export').disabled = false;
+          tempCanvas.width = state.canvas.width;
+          tempCanvas.height = state.canvas.height;
+          
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.putImageData(state.frames[prevIndex], 0, 0);
+          
+          state.onionCtx.drawImage(tempCanvas, 0, 0);
+        }
+      },
+      
+      // Flood fill algorithm
+      floodFill(x, y) {
+        try {
+          x = Math.floor(x);
+          y = Math.floor(y);
+          
+          const imageData = state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
+          const width = imageData.width;
+          const height = imageData.height;
+          const data = imageData.data;
+          
+          // Get target color (color at the clicked position)
+          const targetR = data[(y * width + x) * 4];
+          const targetG = data[(y * width + x) * 4 + 1];
+          const targetB = data[(y * width + x) * 4 + 2];
+          const targetA = data[(y * width + x) * 4 + 3];
+          
+          // Get fill color from color picker
+          const fillColor = document.getElementById('color').value;
+          const fillR = parseInt(fillColor.slice(1, 3), 16);
+          const fillG = parseInt(fillColor.slice(3, 5), 16);
+          const fillB = parseInt(fillColor.slice(5, 7), 16);
+          const fillA = 255;
+          
+          // If target color is the same as fill color, do nothing
+          if (
+            targetR === fillR && 
+            targetG === fillG && 
+            targetB === fillB && 
+            targetA === fillA
+          ) {
+            return;
+          }
+          
+          // Queue for flood fill algorithm
+          const queue = [];
+          queue.push([x, y]);
+          
+          // Process the queue
+          while (queue.length > 0) {
+            const [currX, currY] = queue.pop();
+            
+            // Check if pixel is within bounds
+            if (currX < 0 || currX >= width || currY < 0 || currY >= height) {
+              continue;
+            }
+            
+            // Get current pixel position in data array
+            const pos = (currY * width + currX) * 4;
+            
+            // Check if it matches the target color
+            if (
+              data[pos] === targetR && 
+              data[pos + 1] === targetG && 
+              data[pos + 2] === targetB && 
+              data[pos + 3] === targetA
+            ) {
+              // Set the color
+              data[pos] = fillR;
+              data[pos + 1] = fillG;
+              data[pos + 2] = fillB;
+              data[pos + 3] = fillA;
+              
+              // Add adjacent pixels to queue
+              queue.push([currX + 1, currY]);
+              queue.push([currX - 1, currY]);
+              queue.push([currX, currY + 1]);
+              queue.push([currX, currY - 1]);
+            }
+          }
+          
+          // Update the canvas with the filled area
+          state.ctx.putImageData(imageData, 0, 0);
+          this.saveState();
+        } catch (error) {
+          console.error('Error during flood fill:', error);
+          this.showToast('Error during fill operation', true);
+        }
       }
-    }
-
-    // Initialize application
-    initCanvas();
-    window.addEventListener('resize', () => {
-      if (canvasSize === 'default') initCanvas();
     });
-    updateTimeline();
+  </script>
+<script>
+    // Extend app with frame management functionality
+    Object.assign(app, {
+      // Add a new frame
+      addFrame() {
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Creating new frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Create a new blank frame
+            const newFrame = state.ctx.createImageData(state.canvas.width, state.canvas.height);
+            const data = newFrame.data;
+            
+            // Set all pixels to white
+            for (let i = 0; i < data.length; i += 4) {
+              data[i] = 255;
+              data[i + 1] = 255;
+              data[i + 2] = 255;
+              data[i + 3] = 255;
+            }
+            
+            // Add the new frame after the current one
+            state.frames.splice(state.currentFrame + 1, 0, newFrame);
+            state.undoStacks.splice(state.currentFrame + 1, 0, [newFrame]);
+            state.redoStacks.splice(state.currentFrame + 1, 0, []);
+            
+            // Update the current frame index
+            state.currentFrame = state.currentFrame + 1;
+            
+            // Clear thumbnail cache to force regeneration
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('New frame added');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10); // Small delay to allow UI to update
+        } catch (error) {
+          console.error('Error adding frame:', error);
+          this.showToast('Error adding frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Delete the current frame
+      deleteFrame() {
+        if (state.frames.length <= 1) return;
+        
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Deleting frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Remove frame and its undo/redo stacks
+            state.frames.splice(state.currentFrame, 1);
+            state.undoStacks.splice(state.currentFrame, 1);
+            state.redoStacks.splice(state.currentFrame, 1);
+            
+            // Adjust current frame index if needed
+            state.currentFrame = Math.min(state.currentFrame, state.frames.length - 1);
+            
+            // Clear thumbnail cache
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('Frame deleted');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10);
+        } catch (error) {
+          console.error('Error deleting frame:', error);
+          this.showToast('Error deleting frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Duplicate the current frame
+      duplicateFrame() {
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Duplicating frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Create a copy of the current frame
+            const currentFrame = state.frames[state.currentFrame];
+            const duplicateFrame = new ImageData(
+              new Uint8ClampedArray(currentFrame.data), 
+              currentFrame.width, 
+              currentFrame.height
+            );
+            
+            // Insert the duplicate after the current frame
+            state.frames.splice(state.currentFrame + 1, 0, duplicateFrame);
+            
+            // Create new undo/redo stacks for the new frame
+            state.undoStacks.splice(state.currentFrame + 1, 0, [duplicateFrame]);
+            state.redoStacks.splice(state.currentFrame + 1, 0, []);
+            
+            // Move to the new duplicate frame
+            state.currentFrame = state.currentFrame + 1;
+            
+            // Clear thumbnail cache
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('Frame duplicated');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10);
+        } catch (error) {
+          console.error('Error duplicating frame:', error);
+          this.showToast('Error duplicating frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Move current frame left in timeline
+      moveFrameLeft() {
+        if (state.currentFrame <= 0) return;
+        
+        try {
+          // Swap frames
+          [state.frames[state.currentFrame], state.frames[state.currentFrame - 1]] = 
+          [state.frames[state.currentFrame - 1], state.frames[state.currentFrame]];
+          
+          // Swap undo/redo stacks
+          [state.undoStacks[state.currentFrame], state.undoStacks[state.currentFrame - 1]] = 
+          [state.undoStacks[state.currentFrame - 1], state.undoStacks[state.currentFrame]];
+          
+          [state.redoStacks[state.currentFrame], state.redoStacks[state.currentFrame - 1]] = 
+          [state.redoStacks[state.currentFrame - 1], state.redoStacks[state.currentFrame]];
+          
+          // Update current frame index
+          state.currentFrame--;
+          
+          // Clear thumbnail cache
+          state.thumbCache.clear();
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.showToast('Frame moved left');
+        } catch (error) {
+          console.error('Error moving frame:', error);
+          this.showToast('Error moving frame', true);
+        }
+      },
+      
+      // Move current frame right in timeline
+      moveFrameRight() {
+        if (state.currentFrame >= state.frames.length - 1) return;
+        
+        try {
+          // Swap frames
+          [state.frames[state.currentFrame], state.frames[state.currentFrame + 1]] = 
+          [state.frames[state.currentFrame + 1], state.frames[state.currentFrame]];
+          
+          // Swap undo/redo stacks
+          [state.undoStacks[state.currentFrame], state.undoStacks[state.currentFrame + 1]] = 
+          [state.undoStacks[state.currentFrame + 1], state.undoStacks[state.currentFrame]];
+          
+          [state.redoStacks[state.currentFrame], state.redoStacks[state.currentFrame + 1]] = 
+          [state.redoStacks[state.currentFrame + 1], state.redoStacks[state.currentFrame]];
+          
+          // Update current frame index
+          state.currentFrame++;
+          
+          // Clear thumbnail cache
+          state.thumbCache.clear();
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.showToast('Frame moved right');
+        } catch (error) {
+          console.error('Error moving frame:', error);
+          this.showToast('Error moving frame', true);
+        }
+      },
+      
+      // Copy the current frame to clipboard
+      copyFrame() {
+        try {
+          // Store a deep copy of the current frame
+          const currentFrame = state.frames[state.currentFrame];
+          state.copyBuffer = new ImageData(
+            new Uint8ClampedArray(currentFrame.data),
+            currentFrame.width,
+            currentFrame.height
+          );
+          
+          state.updateButtonStates();
+          this.showToast('Frame copied');
+        } catch (error) {
+          console.error('Error copying frame:', error);
+          this.showToast('Error copying frame', true);
+        }
+      },
+      
+      // Paste copied frame
+      pasteFrame() {
+        if (!state.copyBuffer) return;
+        
+        try {
+          this.saveState();
+          
+          // Create a new copy of the buffer
+          const pasteCopy = new ImageData(
+            new Uint8ClampedArray(state.copyBuffer.data),
+            state.copyBuffer.width,
+            state.copyBuffer.height
+          );
+          
+          // Apply to current frame
+          state.ctx.putImageData(pasteCopy, 0, 0);
+          this.saveState();
+          this.showToast('Frame pasted');
+        } catch (error) {
+          console.error('Error pasting frame:', error);
+          this.showToast('Error pasting frame', true);
+        }
+      },
+      
+      // Create thumbnail canvas for timeline
+      createThumbCanvas(frame) {
+        try {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = state.canvas.width;
+          tempCanvas.height = state.canvas.height;
+          
+          const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+          tempCtx.putImageData(frame, 0, 0);
+          
+          return tempCanvas;
+        } catch (error) {
+          console.error('Error creating thumbnail canvas:', error);
+          return null;
+        }
+      },
+      
+      // Update the timeline display
+      updateTimeline() {
+        try {
+          const timeline = document.getElementById('timeline');
+          timeline.innerHTML = '';
+          
+          // Create and add thumbnail for each frame
+          state.frames.forEach((frame, i) => {
+            let thumb = state.thumbCache.get(i);
+            
+            if (!thumb) {
+              // Create new thumbnail if not in cache
+              const sourceCanvas = this.createThumbCanvas(frame);
+              if (!sourceCanvas) return;
+              
+              thumb = document.createElement('canvas');
+              thumb.width = 80;
+              thumb.height = 60;
+              
+              const thumbCtx = thumb.getContext('2d', { willReadFrequently: true });
+              thumbCtx.drawImage(sourceCanvas, 0, 0, 80, 60);
+              
+              // Add frame number
+              thumbCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+              thumbCtx.fillRect(0, 0, 20, 16);
+              thumbCtx.fillStyle = 'white';
+              thumbCtx.font = '12px Arial';
+              thumbCtx.fillText(i + 1, 4, 12);
+              
+              // Store in cache
+              state.thumbCache.set(i, thumb);
+            }
+            
+            // Set up thumbnail properties and events
+            thumb.className = `frame-thumb ${i === state.currentFrame ? 'active-frame' : ''}`;
+            thumb.title = `Frame ${i + 1}`;
+            
+            thumb.onclick = () => {
+              state.currentFrame = i;
+              state.ctx.putImageData(frame, 0, 0);
+              this.updateTimeline();
+              
+              if (state.onionSkinning) {
+                this.updateOnionSkin();
+              }
+              
+              state.updateButtonStates();
+            };
+            
+            timeline.appendChild(thumb);
+          });
+          
+          // Scroll timeline to show current frame
+          const activeThumb = timeline.querySelector('.active-frame');
+          if (activeThumb) {
+            timeline.scrollLeft = activeThumb.offsetLeft - timeline.clientWidth / 2 + activeThumb.clientWidth / 2;
+          }
+        } catch (error) {
+          console.error('Error updating timeline:', error);
+          this.showToast('Error updating timeline', true);
+        }
+      },
+      
+      // Create a new project
+      newProject() {
+        try {
+          // Reset state
+          state.frames = [];
+          state.currentFrame = 0;
+          state.undoStacks = [];
+          state.redoStacks = [];
+          state.thumbCache.clear();
+          state.copyBuffer = null;
+          
+          // Create initial frame
+          state.ctx.fillStyle = '#FFFFFF';
+          state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+          const initialFrame = state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
+          state.frames.push(initialFrame);
+          state.undoStacks.push([initialFrame]);
+          state.redoStacks.push([]);
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.hideModal('newProjectModal');
+          this.showToast('New project created');
+        } catch (error) {
+          console.error('Error creating new project:', error);
+          this.showToast('Error creating project', true);
+        }
+      },
+      
+      // Save current project
+      saveProject() {
+        try {
+          // Prompt for project name
+          const projectName = prompt('Enter a name for this project:', 'My Animation');
+          if (!projectName) return;
+          
+          const projectData = {
+            name: projectName,
+            date: new Date().toISOString(),
+            canvasWidth: state.canvas.width,
+            canvasHeight: state.canvas.height,
+            // Serialize frames (convert to base64)
+            frames: state.frames.map(frame => {
+              const canvas = document.createElement('canvas');
+              canvas.width = frame.width;
+              canvas.height = frame.height;
+              
+              const ctx = canvas.getContext('2d');
+              ctx.putImageData(frame, 0, 0);
+              
+              return canvas.toDataURL('image/png');
+            })
+          };
+          
+          // Get existing projects
+          let savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          
+          // Add or update project
+          const existingIndex = savedProjects.findIndex(p => p.name === projectName);
+          if (existingIndex >= 0) {
+            savedProjects[existingIndex] = projectData;
+          } else {
+            savedProjects.push(projectData);
+          }
+          
+          // Save to localStorage
+          localStorage.setItem('animateProjects', JSON.stringify(savedProjects));
+          this.showToast(`Project "${projectName}" saved`);
+          
+          // Update project list
+          this.loadSavedProjects();
+        } catch (error) {
+          console.error('Error saving project:', error);
+          this.showToast('Error saving project', true);
+        }
+      },
+      
+      // Load saved projects list
+      loadSavedProjects() {
+        try {
+          const projectList = document.getElementById('projectList');
+          projectList.innerHTML = '';
+          
+          const savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          
+          if (savedProjects.length === 0) {
+            const option = document.createElement('option');
+            option.text = 'No saved projects';
+            option.disabled = true;
+            projectList.add(option);
+            return;
+          }
+          
+          // Sort projects by date (newest first)
+          savedProjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+          
+          // Add each project to the dropdown
+          savedProjects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.name;
+            option.text = `${project.name} (${new Date(project.date).toLocaleDateString()})`;
+            projectList.add(option);
+          });
+        } catch (error) {
+          console.error('Error loading project list:', error);
+        }
+      },
+      
+      // Load selected project
+      loadSelectedProject() {
+        try {
+          const projectList = document.getElementById('projectList');
+          const selectedName = projectList.value;
+          
+          if (!selectedName) {
+            this.showToast('No project selected', true);
+            return;
+          }
+          
+          const savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          const project = savedProjects.find(p => p.name === selectedName);
+          
+          if (!project) {
+            this.showToast('Project not found', true);
+            return;
+          }
+          
+          // Show loading indicator
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Loading project...';
+          loadingIndicator.style.display = 'block';
+          
+          // Load project in a separate thread to avoid UI freezing
+          setTimeout(() => {
+            // Resize canvas if needed
+            state.canvas.width = project.canvasWidth;
+            state.canvas.height = project.canvasHeight;
+            state.onionCanvas.width = project.canvasWidth;
+            state.onionCanvas.height = project.canvasHeight;
+            
+            // Reset state
+            state.frames = [];
+            state.undoStacks = [];
+            state.redoStacks = [];
+            state.currentFrame = 0;
+            state.thumbCache.clear();
+            
+            // Load frames
+            const loadPromises = project.frames.map(dataUrl => {
+              return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = function() {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = state.canvas.width;
+                  canvas.height = state.canvas.height;
+                  
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(img, 0, 0);
+                  
+                  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                  resolve(imageData);
+                };
+                img.onerror = reject;
+                img.src = dataUrl;
+              });
+            });
+            
+            // Process all frames
+            Promise.all(loadPromises)
+              .then(loadedFrames => {
+                state.frames = loadedFrames;
+                
+                // Create undo stacks for each frame
+                state.undoStacks = loadedFrames.map(frame => [
+                  new ImageData(
+                    new Uint8ClampedArray(frame.data),
+                    frame.width,
+                    frame.height
+                  )
+                ]);
+                
+                // Create empty redo stacks
+                state.redoStacks = loadedFrames.map(() => []);
+                
+                // Update UI
+                this.redrawCurrentFrame();
+                this.hideModal('loadProjectModal');
+                this.showToast(`Project "${project.name}" loaded`);
+                
+                loadingIndicator.style.display = 'none';
+              })
+              .catch(error => {
+                console.error('Error loading project frames:', error);
+                this.showToast('Error loading project', true);
+                loadingIndicator.style.display = 'none';
+              });
+          }, 100);
+        } catch (error) {
+          console.error('Error loading project:', error);
+          this.showToast('Error loading project', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      }
+    });
+  </script>
+<script>
+    // Extend app with frame management functionality
+    Object.assign(app, {
+      // Add a new frame
+      addFrame() {
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Creating new frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Create a new blank frame
+            const newFrame = state.ctx.createImageData(state.canvas.width, state.canvas.height);
+            const data = newFrame.data;
+            
+            // Set all pixels to white
+            for (let i = 0; i < data.length; i += 4) {
+              data[i] = 255;
+              data[i + 1] = 255;
+              data[i + 2] = 255;
+              data[i + 3] = 255;
+            }
+            
+            // Add the new frame after the current one
+            state.frames.splice(state.currentFrame + 1, 0, newFrame);
+            state.undoStacks.splice(state.currentFrame + 1, 0, [newFrame]);
+            state.redoStacks.splice(state.currentFrame + 1, 0, []);
+            
+            // Update the current frame index
+            state.currentFrame = state.currentFrame + 1;
+            
+            // Clear thumbnail cache to force regeneration
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('New frame added');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10); // Small delay to allow UI to update
+        } catch (error) {
+          console.error('Error adding frame:', error);
+          this.showToast('Error adding frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Delete the current frame
+      deleteFrame() {
+        if (state.frames.length <= 1) return;
+        
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Deleting frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Remove frame and its undo/redo stacks
+            state.frames.splice(state.currentFrame, 1);
+            state.undoStacks.splice(state.currentFrame, 1);
+            state.redoStacks.splice(state.currentFrame, 1);
+            
+            // Adjust current frame index if needed
+            state.currentFrame = Math.min(state.currentFrame, state.frames.length - 1);
+            
+            // Clear thumbnail cache
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('Frame deleted');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10);
+        } catch (error) {
+          console.error('Error deleting frame:', error);
+          this.showToast('Error deleting frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Duplicate the current frame
+      duplicateFrame() {
+        try {
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Duplicating frame...';
+          loadingIndicator.style.display = 'block';
+          
+          setTimeout(() => {
+            // Create a copy of the current frame
+            const currentFrame = state.frames[state.currentFrame];
+            const duplicateFrame = new ImageData(
+              new Uint8ClampedArray(currentFrame.data), 
+              currentFrame.width, 
+              currentFrame.height
+            );
+            
+            // Insert the duplicate after the current frame
+            state.frames.splice(state.currentFrame + 1, 0, duplicateFrame);
+            
+            // Create new undo/redo stacks for the new frame
+            state.undoStacks.splice(state.currentFrame + 1, 0, [duplicateFrame]);
+            state.redoStacks.splice(state.currentFrame + 1, 0, []);
+            
+            // Move to the new duplicate frame
+            state.currentFrame = state.currentFrame + 1;
+            
+            // Clear thumbnail cache
+            state.thumbCache.clear();
+            
+            // Update UI
+            this.redrawCurrentFrame();
+            this.showToast('Frame duplicated');
+            
+            loadingIndicator.style.display = 'none';
+          }, 10);
+        } catch (error) {
+          console.error('Error duplicating frame:', error);
+          this.showToast('Error duplicating frame', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      },
+      
+      // Move current frame left in timeline
+      moveFrameLeft() {
+        if (state.currentFrame <= 0) return;
+        
+        try {
+          // Swap frames
+          [state.frames[state.currentFrame], state.frames[state.currentFrame - 1]] = 
+          [state.frames[state.currentFrame - 1], state.frames[state.currentFrame]];
+          
+          // Swap undo/redo stacks
+          [state.undoStacks[state.currentFrame], state.undoStacks[state.currentFrame - 1]] = 
+          [state.undoStacks[state.currentFrame - 1], state.undoStacks[state.currentFrame]];
+          
+          [state.redoStacks[state.currentFrame], state.redoStacks[state.currentFrame - 1]] = 
+          [state.redoStacks[state.currentFrame - 1], state.redoStacks[state.currentFrame]];
+          
+          // Update current frame index
+          state.currentFrame--;
+          
+          // Clear thumbnail cache
+          state.thumbCache.clear();
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.showToast('Frame moved left');
+        } catch (error) {
+          console.error('Error moving frame:', error);
+          this.showToast('Error moving frame', true);
+        }
+      },
+      
+      // Move current frame right in timeline
+      moveFrameRight() {
+        if (state.currentFrame >= state.frames.length - 1) return;
+        
+        try {
+          // Swap frames
+          [state.frames[state.currentFrame], state.frames[state.currentFrame + 1]] = 
+          [state.frames[state.currentFrame + 1], state.frames[state.currentFrame]];
+          
+          // Swap undo/redo stacks
+          [state.undoStacks[state.currentFrame], state.undoStacks[state.currentFrame + 1]] = 
+          [state.undoStacks[state.currentFrame + 1], state.undoStacks[state.currentFrame]];
+          
+          [state.redoStacks[state.currentFrame], state.redoStacks[state.currentFrame + 1]] = 
+          [state.redoStacks[state.currentFrame + 1], state.redoStacks[state.currentFrame]];
+          
+          // Update current frame index
+          state.currentFrame++;
+          
+          // Clear thumbnail cache
+          state.thumbCache.clear();
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.showToast('Frame moved right');
+        } catch (error) {
+          console.error('Error moving frame:', error);
+          this.showToast('Error moving frame', true);
+        }
+      },
+      
+      // Copy the current frame to clipboard
+      copyFrame() {
+        try {
+          // Store a deep copy of the current frame
+          const currentFrame = state.frames[state.currentFrame];
+          state.copyBuffer = new ImageData(
+            new Uint8ClampedArray(currentFrame.data),
+            currentFrame.width,
+            currentFrame.height
+          );
+          
+          state.updateButtonStates();
+          this.showToast('Frame copied');
+        } catch (error) {
+          console.error('Error copying frame:', error);
+          this.showToast('Error copying frame', true);
+        }
+      },
+      
+      // Paste copied frame
+      pasteFrame() {
+        if (!state.copyBuffer) return;
+        
+        try {
+          this.saveState();
+          
+          // Create a new copy of the buffer
+          const pasteCopy = new ImageData(
+            new Uint8ClampedArray(state.copyBuffer.data),
+            state.copyBuffer.width,
+            state.copyBuffer.height
+          );
+          
+          // Apply to current frame
+          state.ctx.putImageData(pasteCopy, 0, 0);
+          this.saveState();
+          this.showToast('Frame pasted');
+        } catch (error) {
+          console.error('Error pasting frame:', error);
+          this.showToast('Error pasting frame', true);
+        }
+      },
+      
+      // Create thumbnail canvas for timeline
+      createThumbCanvas(frame) {
+        try {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = state.canvas.width;
+          tempCanvas.height = state.canvas.height;
+          
+          const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+          tempCtx.putImageData(frame, 0, 0);
+          
+          return tempCanvas;
+        } catch (error) {
+          console.error('Error creating thumbnail canvas:', error);
+          return null;
+        }
+      },
+      
+      // Update the timeline display
+      updateTimeline() {
+        try {
+          const timeline = document.getElementById('timeline');
+          timeline.innerHTML = '';
+          
+          // Create and add thumbnail for each frame
+          state.frames.forEach((frame, i) => {
+            let thumb = state.thumbCache.get(i);
+            
+            if (!thumb) {
+              // Create new thumbnail if not in cache
+              const sourceCanvas = this.createThumbCanvas(frame);
+              if (!sourceCanvas) return;
+              
+              thumb = document.createElement('canvas');
+              thumb.width = 80;
+              thumb.height = 60;
+              
+              const thumbCtx = thumb.getContext('2d', { willReadFrequently: true });
+              thumbCtx.drawImage(sourceCanvas, 0, 0, 80, 60);
+              
+              // Add frame number
+              thumbCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+              thumbCtx.fillRect(0, 0, 20, 16);
+              thumbCtx.fillStyle = 'white';
+              thumbCtx.font = '12px Arial';
+              thumbCtx.fillText(i + 1, 4, 12);
+              
+              // Store in cache
+              state.thumbCache.set(i, thumb);
+            }
+            
+            // Set up thumbnail properties and events
+            thumb.className = `frame-thumb ${i === state.currentFrame ? 'active-frame' : ''}`;
+            thumb.title = `Frame ${i + 1}`;
+            
+            thumb.onclick = () => {
+              state.currentFrame = i;
+              state.ctx.putImageData(frame, 0, 0);
+              this.updateTimeline();
+              
+              if (state.onionSkinning) {
+                this.updateOnionSkin();
+              }
+              
+              state.updateButtonStates();
+            };
+            
+            timeline.appendChild(thumb);
+          });
+          
+          // Scroll timeline to show current frame
+          const activeThumb = timeline.querySelector('.active-frame');
+          if (activeThumb) {
+            timeline.scrollLeft = activeThumb.offsetLeft - timeline.clientWidth / 2 + activeThumb.clientWidth / 2;
+          }
+        } catch (error) {
+          console.error('Error updating timeline:', error);
+          this.showToast('Error updating timeline', true);
+        }
+      },
+      
+      // Create a new project
+      newProject() {
+        try {
+          // Reset state
+          state.frames = [];
+          state.currentFrame = 0;
+          state.undoStacks = [];
+          state.redoStacks = [];
+          state.thumbCache.clear();
+          state.copyBuffer = null;
+          
+          // Create initial frame
+          state.ctx.fillStyle = '#FFFFFF';
+          state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+          const initialFrame = state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
+          state.frames.push(initialFrame);
+          state.undoStacks.push([initialFrame]);
+          state.redoStacks.push([]);
+          
+          // Update UI
+          this.redrawCurrentFrame();
+          this.hideModal('newProjectModal');
+          this.showToast('New project created');
+        } catch (error) {
+          console.error('Error creating new project:', error);
+          this.showToast('Error creating project', true);
+        }
+      },
+      
+      // Save current project
+      saveProject() {
+        try {
+          // Prompt for project name
+          const projectName = prompt('Enter a name for this project:', 'My Animation');
+          if (!projectName) return;
+          
+          const projectData = {
+            name: projectName,
+            date: new Date().toISOString(),
+            canvasWidth: state.canvas.width,
+            canvasHeight: state.canvas.height,
+            // Serialize frames (convert to base64)
+            frames: state.frames.map(frame => {
+              const canvas = document.createElement('canvas');
+              canvas.width = frame.width;
+              canvas.height = frame.height;
+              
+              const ctx = canvas.getContext('2d');
+              ctx.putImageData(frame, 0, 0);
+              
+              return canvas.toDataURL('image/png');
+            })
+          };
+          
+          // Get existing projects
+          let savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          
+          // Add or update project
+          const existingIndex = savedProjects.findIndex(p => p.name === projectName);
+          if (existingIndex >= 0) {
+            savedProjects[existingIndex] = projectData;
+          } else {
+            savedProjects.push(projectData);
+          }
+          
+          // Save to localStorage
+          localStorage.setItem('animateProjects', JSON.stringify(savedProjects));
+          this.showToast(`Project "${projectName}" saved`);
+          
+          // Update project list
+          this.loadSavedProjects();
+        } catch (error) {
+          console.error('Error saving project:', error);
+          this.showToast('Error saving project', true);
+        }
+      },
+      
+      // Load saved projects list
+      loadSavedProjects() {
+        try {
+          const projectList = document.getElementById('projectList');
+          projectList.innerHTML = '';
+          
+          const savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          
+          if (savedProjects.length === 0) {
+            const option = document.createElement('option');
+            option.text = 'No saved projects';
+            option.disabled = true;
+            projectList.add(option);
+            return;
+          }
+          
+          // Sort projects by date (newest first)
+          savedProjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+          
+          // Add each project to the dropdown
+          savedProjects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.name;
+            option.text = `${project.name} (${new Date(project.date).toLocaleDateString()})`;
+            projectList.add(option);
+          });
+        } catch (error) {
+          console.error('Error loading project list:', error);
+        }
+      },
+      
+      // Load selected project
+      loadSelectedProject() {
+        try {
+          const projectList = document.getElementById('projectList');
+          const selectedName = projectList.value;
+          
+          if (!selectedName) {
+            this.showToast('No project selected', true);
+            return;
+          }
+          
+          const savedProjects = JSON.parse(localStorage.getItem('animateProjects') || '[]');
+          const project = savedProjects.find(p => p.name === selectedName);
+          
+          if (!project) {
+            this.showToast('Project not found', true);
+            return;
+          }
+          
+          // Show loading indicator
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Loading project...';
+          loadingIndicator.style.display = 'block';
+          
+          // Load project in a separate thread to avoid UI freezing
+          setTimeout(() => {
+            // Resize canvas if needed
+            state.canvas.width = project.canvasWidth;
+            state.canvas.height = project.canvasHeight;
+            state.onionCanvas.width = project.canvasWidth;
+            state.onionCanvas.height = project.canvasHeight;
+            
+            // Reset state
+            state.frames = [];
+            state.undoStacks = [];
+            state.redoStacks = [];
+            state.currentFrame = 0;
+            state.thumbCache.clear();
+            
+            // Load frames
+            const loadPromises = project.frames.map(dataUrl => {
+              return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = function() {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = state.canvas.width;
+                  canvas.height = state.canvas.height;
+                  
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(img, 0, 0);
+                  
+                  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                  resolve(imageData);
+                };
+                img.onerror = reject;
+                img.src = dataUrl;
+              });
+            });
+            
+            // Process all frames
+            Promise.all(loadPromises)
+              .then(loadedFrames => {
+                state.frames = loadedFrames;
+                
+                // Create undo stacks for each frame
+                state.undoStacks = loadedFrames.map(frame => [
+                  new ImageData(
+                    new Uint8ClampedArray(frame.data),
+                    frame.width,
+                    frame.height
+                  )
+                ]);
+                
+                // Create empty redo stacks
+                state.redoStacks = loadedFrames.map(() => []);
+                
+                // Update UI
+                this.redrawCurrentFrame();
+                this.hideModal('loadProjectModal');
+                this.showToast(`Project "${project.name}" loaded`);
+                
+                loadingIndicator.style.display = 'none';
+              })
+              .catch(error => {
+                console.error('Error loading project frames:', error);
+                this.showToast('Error loading project', true);
+                loadingIndicator.style.display = 'none';
+              });
+          }, 100);
+        } catch (error) {
+          console.error('Error loading project:', error);
+          this.showToast('Error loading project', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+        }
+      }
+    });
+  </script>
+<script>
+    // Extend app with export and preview functionality
+    Object.assign(app, {
+      // Preview animation
+      async previewAnimation() {
+        if (state.frames.length <= 1) {
+          this.showToast('Add at least two frames to preview', true);
+          return;
+        }
+        
+        state.isPreviewing = !state.isPreviewing;
+        
+        // Update button text
+        const previewButton = document.getElementById('previewBtn');
+        previewButton.textContent = state.isPreviewing ? 'Stop' : 'Preview';
+        
+        // Stop preview if toggled off
+        if (!state.isPreviewing) {
+          state.ctx.putImageData(state.frames[state.currentFrame], 0, 0);
+          return;
+        }
+        
+        try {
+          // Get frame duration from input
+          const duration = parseInt(document.getElementById('frameDuration').value) || 100;
+          
+          // Use requestAnimationFrame for smoother playback
+          let lastTime = 0;
+          let frameIndex = state.currentFrame;
+          let elapsed = 0;
+          
+          const animate = (time) => {
+            if (!state.isPreviewing) return;
+            
+            if (!lastTime) lastTime = time;
+            elapsed += time - lastTime;
+            lastTime = time;
+            
+            if (elapsed > duration) {
+              // Time to show next frame
+              frameIndex = (frameIndex + 1) % state.frames.length;
+              state.ctx.putImageData(state.frames[frameIndex], 0, 0);
+              elapsed = 0;
+            }
+            
+            requestAnimationFrame(animate);
+          };
+          
+          requestAnimationFrame(animate);
+        } catch (error) {
+          console.error('Error during animation preview:', error);
+          this.showToast('Error during preview', true);
+          state.isPreviewing = false;
+          document.getElementById('previewBtn').textContent = 'Preview';
+        }
+      },
+      
+      // Export animation as GIF
+      async exportGif() {
+        if (state.frames.length <= 1) {
+          this.showToast('Add at least two frames to create an animation', true);
+          return;
+        }
+        
+        if (state.frames.every(f => {
+          return !f.data.some(d => d !== 255);
+        })) {
+          this.showToast('No content to export! Draw something first', true);
+          return;
+        }
+        
+        try {
+          // Show loading indicator
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          loadingIndicator.textContent = 'Preparing to export GIF...';
+          loadingIndicator.style.display = 'block';
+          
+          // Disable export button
+          document.getElementById('exportBtn').disabled = true;
+          
+          setTimeout(() => {
+            try {
+              // Get frame duration
+              const duration = parseInt(document.getElementById('frameDuration').value) || 100;
+              
+              // Create a new GIF
+              const gif = new GIF({
+                workers: 4,
+                quality: 10,
+                width: state.canvas.width,
+                height: state.canvas.height,
+                workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+              });
+              
+              // Update progress indicator
+              gif.on('progress', p => {
+                loadingIndicator.textContent = `Exporting GIF... ${Math.round(p * 100)}%`;
+              });
+              
+              // Add each frame to the GIF
+              state.frames.forEach(frame => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = state.canvas.width;
+                tempCanvas.height = state.canvas.height;
+                
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(frame, 0, 0);
+                
+                gif.addFrame(tempCanvas, { delay: duration, copy: true });
+              });
+              
+              // Render the GIF
+              gif.on('finished', blob => {
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                a.href = url;
+                a.download = `animation-${timestamp}.gif`;
+                a.click();
+                
+                // Clean up
+                URL.revokeObjectURL(url);
+                loadingIndicator.style.display = 'none';
+                document.getElementById('exportBtn').disabled = false;
+                
+                this.showToast('GIF exported successfully');
+              });
+              
+              gif.render();
+            } catch (error) {
+              throw error;
+            }
+          }, 100);
+        } catch (error) {
+          console.error('Error exporting GIF:', error);
+          this.showToast('Failed to export GIF. Try reducing frames or canvas size', true);
+          document.getElementById('loadingIndicator').style.display = 'none';
+          document.getElementById('exportBtn').disabled = false;
+        }
+      }
+    });
+    
+    // Initialize the application when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
   </script>
 </body>
 </html>
